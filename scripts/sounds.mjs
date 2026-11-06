@@ -7,16 +7,19 @@
 // Any sound whose recording isn't there is skipped, and the files already in public/sfx stay as they are.
 // Loops are made seamless: the cut runs one crossfade longer and its tail is crossfaded into its head.
 // Each sound: cut (or each separate hit found in a multi-hit take), filtered, mono for one-shots, faded, loudness-normalised
-// two-pass (EBU R128, -1 dBTP ceiling), encoded to .ogg (Vorbis) and .m4a (AAC). public/sfx/manifest.json already lists
-// every sound; the measured loudness of each file built goes to shots/audio/loudness.json.
+// two-pass (EBU R128, -1 dBTP ceiling), encoded to .ogg (Vorbis) and .m4a (AAC). Then public/sfx/manifest.json is
+// rewritten to list every sound that's in public/sfx, so the game never asks for one that isn't. The measured loudness
+// of each file built goes to shots/audio/loudness.json.
 //   SONNISS_DIR=... [CC0_DIR=...] [MUSIC_DIR=...] node scripts/sounds.mjs
+//   node scripts/sounds.mjs --manifest    only rewrites the manifest from the files there
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 const SON = process.env.SONNISS_DIR ?? 'sonniss', CC0 = process.env.CC0_DIR ?? 'cc0', MUSIC = process.env.MUSIC_DIR ?? 'music';
 const OUT = 'public/sfx', TMP = 'shots/audio/tmp';
-mkdirSync(OUT, { recursive: true }); mkdirSync(TMP, { recursive: true });
+mkdirSync(OUT, { recursive: true }); if (!process.argv.includes('--manifest')) mkdirSync(TMP, { recursive: true });
 const s = p => join(SON, p), c = p => join(CC0, p);
+const MANIFEST_ONLY = process.argv.includes('--manifest');
 // id: [{ src, start?, dur?, hits?: n (split a multi-hit take into separate hits), af?: extra filters, lufs, loop?, stereo? }]
 const SPEC = {
 	// explosions, layered in game as crack/body + sub + distant tail + debris
@@ -93,7 +96,7 @@ function measure(file) {
 	return { I, tp };
 }
 const table = [], skipped = [];
-for (const [id, list] of Object.entries(SPEC)) {
+for (const [id, list] of MANIFEST_ONLY ? [] : Object.entries(SPEC)) {
 	const missing = list.filter(it => !existsSync(it.src));
 	if (missing.length) { skipped.push(`${id} (${missing[0].src})`); continue; }
 	let n = 0;
@@ -130,7 +133,8 @@ for (const [id, list] of Object.entries(SPEC)) {
 // music bed: "An Untold Legend" (SkyleTheFrench, CC0). Plays from the top once, then loops 57.50 s -> 106.75 s (the
 // second statement of the theme, chosen by chroma similarity 0.83 and a level match within 0.1 dB). The file ends at the
 // loop end with its last 2 s crossfaded into the 2 s before the loop start, so the jump back is seamless.
-if (!existsSync(join(MUSIC, 'an_untold_legend_v2.mp3'))) skipped.push(`music (${join(MUSIC, 'an_untold_legend_v2.mp3')})`);
+if (MANIFEST_ONLY) {}
+else if (!existsSync(join(MUSIC, 'an_untold_legend_v2.mp3'))) skipped.push(`music (${join(MUSIC, 'an_untold_legend_v2.mp3')})`);
 else {
 	const src = join(MUSIC, 'an_untold_legend_v2.mp3'), LS = 57.5, LE = 106.75, XF = 2, wav = join(TMP, 'music.wav'), norm = join(TMP, 'music.n.wav');
 	run(['-hide_banner', '-y', '-i', src, '-filter_complex', `[0]aresample=44100,asplit=3[h][t][u];[h]atrim=0:${LE - XF},asetpts=PTS-STARTPTS[head];[t]atrim=${LE - XF}:${LE},asetpts=PTS-STARTPTS,afade=t=out:d=${XF}:curve=qsin[ta];[u]atrim=${LS - XF}:${LS},asetpts=PTS-STARTPTS,afade=t=in:d=${XF}:curve=qsin[tb];[ta][tb]amix=inputs=2:normalize=0[mix];[head][mix]concat=n=2:v=0:a=1,acompressor=threshold=-26dB:ratio=2:attack=120:release=900:makeup=2`, '-ar', '44100', wav]);
@@ -142,6 +146,18 @@ else {
 	const m = measure(join(OUT, 'music_0.ogg'));
 	table.push({ file: 'music_0.ogg', target: -18, lufsI: m.I, truePeakDb: m.tp, loop: true, source: 'music/an_untold_legend_v2.mp3 (CC0, SkyleTheFrench)' });
 }
+// the manifest: each sound's takes, in this file's order, for the files that are there; the music and its loop points last
+const LS = 57.5, LE = 106.75; // the music's loop, as above
+const manifest = {};
+for (const [id, list] of Object.entries(SPEC)) {
+	const n = list.reduce((a, it) => a + (it.hits ?? 1), 0);
+	const have = Array.from({ length: n }, (_, k) => `${id}_${k}`).filter(b => existsSync(join(OUT, b + '.ogg')) || existsSync(join(OUT, b + '.m4a')));
+	if (have.length) manifest[id] = have;
+}
+if (existsSync(join(OUT, 'music_0.ogg')) || existsSync(join(OUT, 'music_0.m4a'))) { manifest.music = ['music_0']; manifest.musicLoop = [LS, LE]; }
+writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest));
+console.log(`manifest: ${Object.values(manifest).filter(v => typeof v[0] === 'string').flat().length} sounds`);
+if (MANIFEST_ONLY) process.exit(0);
 mkdirSync('shots/audio', { recursive: true });
 writeFileSync('shots/audio/loudness.json', JSON.stringify(table, null, 1));
 rmSync(TMP, { recursive: true, force: true });

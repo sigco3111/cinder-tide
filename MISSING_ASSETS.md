@@ -4,7 +4,7 @@ The released game has 105 sounds. 18 are in this repo (CC0). The other 87 aren't
 
 ## What happens without them
 
-The game builds and plays. Those 87 sounds are silent: explosions, crumbling rock, glass, ice, splashes, the sea and surf, rain and thunder, the Magma Lance's flame, steam, lava, punches, the bosses' roars and stomps. The browser logs a 404 for each missing file as the game loads. Music, footsteps, wind, the hurt and UI sounds still play. `scripts/ambience.mjs` and `scripts/mix.mjs` measure the sound, so they need the sounds back.
+The game builds and plays. Those 87 sounds are silent: explosions, crumbling rock, glass, ice, splashes, the sea and surf, rain and thunder, the Magma Lance's flame, steam, lava, punches, the bosses' roars and stomps. `public/sfx/manifest.json` lists only the sounds that are here, so the game doesn't ask for the others. Music, footsteps, wind, the hurt and UI sounds still play. `scripts/ambience.mjs` and `scripts/mix.mjs` measure the sound, so they need the sounds back.
 
 ## Where to get them
 
@@ -15,8 +15,8 @@ The game builds and plays. Those 87 sounds are silent: explosions, crumbling roc
 
 1. Download the bundles for the years listed below and unzip them into one folder, laid out `<year>/<library folder>/<file>`, for example `sonniss/2017/Gamemaster Audio -  Explosion Sound Pack/explosion_large_08.wav`. The exact folder and file names are in `scripts/sounds.mjs` (a few library folders have a double space, as in the bundle).
 2. Install [ffmpeg](https://ffmpeg.org), with libvorbis and AAC.
-3. Run `SONNISS_DIR=<that folder> node scripts/sounds.mjs`. It cuts, filters and loudness-normalises each recording, writes `public/sfx/<id>_<n>.ogg` and `.m4a`, and skips any recording it can't find, saying which. The 18 CC0 files already here are left alone unless you also point `CC0_DIR` and `MUSIC_DIR` at their recordings.
-4. `npm run build`. `public/sfx/` ships as it is, and `public/sfx/manifest.json` already lists every sound.
+3. Run `SONNISS_DIR=<that folder> node scripts/sounds.mjs`. It cuts, filters and loudness-normalises each recording, writes `public/sfx/<id>_<n>.ogg` and `.m4a`, skips any recording it can't find, saying which, and rewrites `public/sfx/manifest.json` to list every sound that's there. The 18 CC0 files already here are left alone unless you also point `CC0_DIR` and `MUSIC_DIR` at their recordings.
+4. `npm run build`. `public/sfx/` ships as it is. With all 105 sounds back, the manifest is the released game's, byte for byte. If you add the files some other way, `node scripts/sounds.mjs --manifest` rewrites the manifest without building anything.
 
 The rebuilt files won't be byte-identical to the released game's (encoders differ), but they're the same cuts at the same loudness.
 

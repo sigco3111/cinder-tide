@@ -4,7 +4,7 @@ A 2D falling-matter superhero game on [Patch](https://patch.gg), in TypeScript w
 
 ## Missing sounds
 
-87 of the game's sound effects aren't in the repo, because their licence doesn't allow passing them on as files. The game runs without them: `src/audio/audio.ts` skips any file that doesn't load, so those sounds are silent and the browser logs a 404 for each. To put them back, follow [MISSING_ASSETS.md](MISSING_ASSETS.md): download the free sound bundles it names, then `SONNISS_DIR=<folder> node scripts/sounds.mjs` rebuilds them into `public/sfx/`. Never commit those files, never add them to Patch's asset library, and never send them to an AI service. New sounds you add should be CC0 or CC-BY (credited), so they can stay in the repo.
+87 of the game's sound effects aren't in the repo, because their licence doesn't allow passing them on as files. The game runs without them: `public/sfx/manifest.json` lists only the sounds that are here, and `src/audio/audio.ts` plays nothing for a sound it doesn't have, so those sounds are silent. To put them back, follow [MISSING_ASSETS.md](MISSING_ASSETS.md): download the free sound bundles it names, then `SONNISS_DIR=<folder> node scripts/sounds.mjs` rebuilds them into `public/sfx/` and lists them in the manifest. Never commit those files, never add them to Patch's asset library, and never send them to an AI service. New sounds you add should be CC0 or CC-BY (credited), so they can stay in the repo.
 
 ## Run
 
@@ -37,7 +37,7 @@ Screenshots and clips go in `shots/`, which git ignores.
 ## Change
 
 - Code that runs is all in `src/`. `public/` ships as it is: `CREDITS.md`, `LICENSE` (a copy of the one at the top, so change both), `patch-credits.js` (the "i" credits button) and `sfx/`.
-- `public/sfx/manifest.json` lists every sound by id; the game picks a random take per event and plays `.ogg` or `.m4a`, whichever decodes.
+- `public/sfx/manifest.json` lists each sound's takes by id; the game picks a random take per event and plays `.ogg` or `.m4a`, whichever decodes. `node scripts/sounds.mjs --manifest` rewrites it from the files in `public/sfx/`.
 - Patch's game host is case-sensitive, serves only what's in the release and blocks requests to other hosts: `npm run check` must pass.
 - To publish: put the next version in `patch.json`, commit, then `pch publish`, which says what comes next. A fork's `patch.json` has to name the fork, and a fork that ships the missing sounds must keep a proprietary art licence, as this game's release does.
 
