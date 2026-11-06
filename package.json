@@ -1,0 +1,25 @@
+{
+  "name": "cinder-tide",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5191",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "check": "node scripts/check-dist.mjs dist",
+    "bot": "node scripts/bot.mjs",
+    "anim": "node scripts/anim.mjs",
+    "perf": "node scripts/perf.mjs",
+    "shots": "node scripts/shots.mjs",
+    "verify": "npm run typecheck && npm run build && npm run check && npm run anim && npm run bot && npm run perf"
+  },
+  "dependencies": {
+    "@dimforge/rapier2d-compat": "0.21.0"
+  },
+  "devDependencies": {
+    "playwright": "1.64.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.5"
+  }
+}

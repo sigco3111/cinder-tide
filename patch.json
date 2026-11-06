@@ -1,0 +1,15 @@
+{
+  "project": "blendi/cinder-tide",
+  "version": "0.3.1",
+  "channel": "public",
+  "files": "dist",
+  "recipe": {
+    "mode": "browser",
+    "launch": { "kind": "browser", "entry": "index.html", "component": "main" },
+    "components": [{ "id": "main", "file": "", "kind": "main", "label": "Main files" }],
+    "test": {
+      "checks": ["boot", "render", "fly", "boil-the-sea", "freeze", "grip-and-throw", "meteor-drop", "enemies-and-counters", "no-errors", "combos", "magma-titan", "storm-leviathan"],
+      "minutes": 1
+    }
+  }
+}

@@ -1,0 +1,61 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# Builds and what they need. Builds go in a release, with pch publish, not in the repo.
+/dist/
+node_modules/
+
+# Screenshots and clips from the test scripts
+/shots/
+
+# Editors and systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+
+# The sounds scripts/sounds.mjs rebuilds from the Sonniss bundles (MISSING_ASSETS.md): their licence bars passing them
+# on, so they never go in git. Only the CC0 sounds below are tracked.
+/sonniss/
+/public/sfx/*.ogg
+/public/sfx/*.m4a
+!/public/sfx/music_0.ogg
+!/public/sfx/music_0.m4a
+!/public/sfx/wind_loop_0.ogg
+!/public/sfx/wind_loop_0.m4a
+!/public/sfx/gale_loop_0.ogg
+!/public/sfx/gale_loop_0.m4a
+!/public/sfx/step_hard_0.ogg
+!/public/sfx/step_hard_0.m4a
+!/public/sfx/step_hard_1.ogg
+!/public/sfx/step_hard_1.m4a
+!/public/sfx/step_hard_2.ogg
+!/public/sfx/step_hard_2.m4a
+!/public/sfx/step_hard_3.ogg
+!/public/sfx/step_hard_3.m4a
+!/public/sfx/step_hard_4.ogg
+!/public/sfx/step_hard_4.m4a
+!/public/sfx/step_soft_0.ogg
+!/public/sfx/step_soft_0.m4a
+!/public/sfx/step_soft_1.ogg
+!/public/sfx/step_soft_1.m4a
+!/public/sfx/step_soft_2.ogg
+!/public/sfx/step_soft_2.m4a
+!/public/sfx/step_soft_3.ogg
+!/public/sfx/step_soft_3.m4a
+!/public/sfx/step_soft_4.ogg
+!/public/sfx/step_soft_4.m4a
+!/public/sfx/hurt_0.ogg
+!/public/sfx/hurt_0.m4a
+!/public/sfx/hurt_1.ogg
+!/public/sfx/hurt_1.m4a
+!/public/sfx/hurt_2.ogg
+!/public/sfx/hurt_2.m4a
+!/public/sfx/ui_0.ogg
+!/public/sfx/ui_0.m4a
+!/public/sfx/objective_0.ogg
+!/public/sfx/objective_0.m4a
