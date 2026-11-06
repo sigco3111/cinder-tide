@@ -14,6 +14,7 @@ import { Powers } from './powers';
 import { Input, type Intent } from './input';
 import { Sound } from '../audio/audio';
 import { UI } from '../ui/ui';
+import { PadMenu } from '../ui/padmenu';
 
 const VIEW_GROUND = 228, VIEW_FLY = 262; // cells visible vertically: the hero (18 cells) is ~7-8% of the screen
 const DT = 1 / 60;
@@ -27,14 +28,14 @@ const ARENA_WAVES: [string, number][][] = [
 	[['crawler', 4], ['brute', 2], ['wraith', 2], ['swarm', 2]],
 ];
 const TUTORIAL = [
-	{ t: 'Move and jump', b: 'A and D to run, Space to jump. Gamepad: left stick and A.', done: (g: Game) => g.tut.moved > 60 && g.tut.jumped },
-	{ t: 'Fly', b: 'Press Space again in the air to fly. Steer with W A S D. C stops flying.', done: (g: Game) => g.tut.flyTime > 1.2 },
-	{ t: 'Boil the sea', b: 'Hold the left mouse button over the sea: the Magma Lance boils it into steam. Watch the steam rise into clouds.', done: (g: Game) => g.w.stats.boiled - g.tut.boil0 > 600 },
-	{ t: 'Lava Blast', b: 'Hold the right mouse button to charge, release to blast.', done: (g: Game) => g.powers.stats.blasts > 0 },
-	{ t: 'Grip', b: 'Point at rock and hold E to tear out what is inside the circle, then flick the mouse and let go to throw it (scroll to resize the circle).', done: (g: Game) => g.powers.stats.throws > 0 },
-	{ t: 'Rime Burst', b: 'Hold F to freeze. Freeze the sea, or freeze a cloud into snow.', done: (g: Game) => g.w.stats.frozen - g.tut.frozen0 > 150 || g.powers.stats.rimeFrames > 90 },
-	{ t: 'Meteor Drop', b: 'Press Q (in the air, or on the ground to leap first) to dive and slam.', done: (g: Game) => g.powers.stats.slams > 0 },
-	{ t: 'Phase Dash', b: 'Shift dashes toward the cursor and carves a tunnel through rock. Metal, basalt and obsidian stop you.', done: (g: Game) => g.powers.stats.dashes > 0 },
+	{ t: 'Move and jump', b: 'A and D to run, Space to jump. Gamepad: left stick and A.', p: 'Left stick to run, {A} to jump.', done: (g: Game) => g.tut.moved > 60 && g.tut.jumped },
+	{ t: 'Fly', b: 'Press Space again in the air to fly. Steer with W A S D. C stops flying.', p: 'Press {A} again in the air to fly. Steer with the left stick. {Y} stops flying.', done: (g: Game) => g.tut.flyTime > 1.2 },
+	{ t: 'Boil the sea', b: 'Hold the left mouse button over the sea: the Magma Lance boils it into steam. Watch the steam rise into clouds.', p: 'Aim at the sea with the right stick and hold {RT}: the Magma Lance boils it into steam. Watch the steam rise into clouds.', done: (g: Game) => g.w.stats.boiled - g.tut.boil0 > 600 },
+	{ t: 'Lava Blast', b: 'Hold the right mouse button to charge, release to blast.', p: 'Hold {LT} to charge, release to blast.', done: (g: Game) => g.powers.stats.blasts > 0 },
+	{ t: 'Grip', b: 'Point at rock and hold E to tear out what is inside the circle, then flick the mouse and let go to throw it (scroll to resize the circle).', p: 'Aim at rock and hold {RB} to tear out what is inside the circle, then flick the right stick and let go to throw it (d-pad up or down with {RB} resizes the circle).', done: (g: Game) => g.powers.stats.throws > 0 },
+	{ t: 'Rime Burst', b: 'Hold F to freeze. Freeze the sea, or freeze a cloud into snow.', p: 'Hold {LB} to freeze. Freeze the sea, or freeze a cloud into snow.', done: (g: Game) => g.w.stats.frozen - g.tut.frozen0 > 150 || g.powers.stats.rimeFrames > 90 },
+	{ t: 'Meteor Drop', b: 'Press Q (in the air, or on the ground to leap first) to dive and slam.', p: 'Press {X} (in the air, or on the ground to leap first) to dive and slam.', done: (g: Game) => g.powers.stats.slams > 0 },
+	{ t: 'Phase Dash', b: 'Shift dashes toward the cursor and carves a tunnel through rock. Metal, basalt and obsidian stop you.', p: '{B} dashes toward where you aim and carves a tunnel through rock. Metal, basalt and obsidian stop you.', done: (g: Game) => g.powers.stats.dashes > 0 },
 ];
 
 export class Game {
@@ -42,7 +43,7 @@ export class Game {
 	zoomOverride = 0; camFocus: { x: number; y: number } | null = null; // media only: a closer camera for clips
 	dmg = { taken: 0, hits: 0, minHealth: 100, byKind: {} as Record<string, number> };
 	bosses!: Bosses; style = new Style(); slowmo = 0; hurtT = 9; result: '' | 'won' | 'lost' = ''; killsByKind: Record<string, number> = {}; deathLog: { kind: string; how: string; t: number }[] = [];
-	input: Input; sound = new Sound(); ui = new UI();
+	input: Input; sound = new Sound(); ui = new UI(); padMenu: PadMenu; private words = '';
 	mode: Mode = 'title'; seed: number; testMode: boolean;
 	cam = { x: 0, y: 0, vx: 0, vy: 0 }; trauma = 0; stop = 0; flashV = 0; time = 0; frame = 0;
 	acc = 0; last = 0; fps = 60; fpsAcc = 0; fpsN = 0; frameMs: number[] = []; simMsAvg = 0; renderMsAvg = 0;
@@ -54,11 +55,12 @@ export class Game {
 	constructor(canvas: HTMLCanvasElement, seed: number, testMode: boolean) {
 		this.canvas = canvas; this.seed = seed; this.testMode = testMode;
 		this.input = new Input(canvas);
+		this.padMenu = new PadMenu(this.input, this.ui);
 		this.input.onPointer = (x, y) => { if (this.mode !== 'title') this.ui.cursorAt(x, y, true); };
 		this.ui.onPlay = m => this.begin(m);
 		this.ui.onSkip = () => this.endTutorial();
 		this.ui.onRestart = () => this.restart();
-		this.ui.onKeep = () => { this.done = true; this.ui.objective('Keep wrecking', 'Everything still works. Esc for the menu.'); };
+		this.ui.onKeep = () => { this.done = true; this.ui.objective('Keep wrecking', `Everything still works. ${this.menuKey()} for the menu.`); };
 		this.ui.onSpawn = () => this.spawnWave(Math.max(1, this.wave));
 		this.ui.onVolume = v => this.sound.setVolume(v);
 		this.ui.onMusic = v => { this.sound.musicLevel = v; };
@@ -107,13 +109,13 @@ export class Game {
 		this.mode = m; this.ui.bossBar(false); this.ui.clearPrompts();
 		this.ui.meterSet(m === 'story' || m === 'sandbox', m === 'story' || m === 'sandbox' || m === 'leviathan'); this.ui.hideTitle(this.testMode); document.body.classList.add('playing'); this.sound.start(); this.started = true;
 		if (m === 'story') { this.tut.step = 0; this.tut.boil0 = this.w.stats.boiled; this.tut.frozen0 = this.w.stats.frozen; this.showTut(); }
-		else if (m === 'sandbox') { this.tut.step = -1; this.ui.prompt(null); this.ui.objective('Sandbox', 'Every power, no fail. Esc for the menu (spawn enemies there).'); }
+		else if (m === 'sandbox') { this.tut.step = -1; this.ui.prompt(null); this.ui.objective('Sandbox', `Every power, no fail. ${this.menuKey()} for the menu (spawn enemies there).`); }
 		else { this.tut.step = -1; this.ui.prompt(null); this.beginCombat(m); }
 	}
 	showTut() {
 		const s = TUTORIAL[this.tut.step];
 		if (!s) { this.endTutorial(); return; }
-		this.ui.prompt(s.t, s.b, `${this.tut.step + 1} / ${TUTORIAL.length}`);
+		this.ui.prompt(s.t, this.input.usingPad ? this.input.padText(s.p) : s.b, `${this.tut.step + 1} / ${TUTORIAL.length}`);
 		this.ui.objective('Learn your powers', 'Skip the tutorial any time.');
 	}
 	endTutorial() {
@@ -185,6 +187,7 @@ export class Game {
 		this.fpsAcc += dtReal; this.fpsN++;
 		if (this.fpsAcc > 0.5) { this.fps = this.fpsN / this.fpsAcc; this.fpsAcc = 0; this.fpsN = 0; }
 		if (this.testMode) { this.draw(); return; } // tests drive the clock with __game.advance
+		this.padMenu.update(now); this.padWords();
 		this.resize();
 		if (!this.ui.paused) {
 			if (this.slowmo > 0) { this.slowmo -= dtReal; this.acc += dtReal * 0.28; } else this.acc += dtReal;
@@ -194,6 +197,15 @@ export class Game {
 		} else this.readMenuInput();
 		this.draw(this.testMode ? 1 : Math.min(1, this.acc / DT));
 	};
+	/** The words follow the device: keys and mouse, or the pad in use (with its own button names). */
+	padWords() {
+		const k = this.input.usingPad ? this.input.padKind : 'keys';
+		if (k === this.words) return;
+		this.words = k;
+		this.ui.words(this.input.usingPad, s => this.input.padText(s));
+		if (this.tut.step >= 0) this.showTut();
+	}
+	menuKey() { return this.input.usingPad ? this.input.padLabel('Start') : 'Esc'; }
 	readMenuInput() { const it = this.input.read(); if (it.pausePressed) this.ui.pause(false); if (it.help) this.ui.toggleHelp(); }
 	resize() {
 		const dpr = Math.min(2, devicePixelRatio || 1);

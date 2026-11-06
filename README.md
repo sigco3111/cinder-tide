@@ -26,7 +26,7 @@ npm run build      # makes dist/, the game as Patch serves it
 node scripts/preview.mjs dist 8080   # serves dist/ with the game host's headers
 ```
 
-Controls: A and D to move, Space to jump, Space again in the air to fly (W A S D steers, C stops flying). Hold left mouse for the Magma Lance, hold right mouse to charge a Lava Blast, hold E to Grip rock (flick and let go to throw, scroll to size the circle), hold F for Rime Burst, Q in the air for Meteor Drop, Shift to Phase Dash. H shows the controls, Esc pauses. Gamepads work too.
+Controls: A and D to move, Space to jump, Space again in the air to fly (W A S D steers, C stops flying). Hold left mouse for the Magma Lance, hold right mouse to charge a Lava Blast, hold E to Grip rock (flick and let go to throw, scroll to size the circle), hold F for Rime Burst, Q in the air for Meteor Drop, Shift to Phase Dash. H shows the controls, Esc pauses. Gamepads work too, menus included: the D-pad or left stick picks a button, A presses it, B goes back, Start pauses.
 
 Modes: Play (a guided tour, then waves on the town), Arena, the two boss fights, and Sandbox.
 
