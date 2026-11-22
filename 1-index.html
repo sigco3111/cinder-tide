@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>신더 타이드 (Cinder Tide)</title>
+<link rel="icon" href="data:," />
+<style>
+:root { --accent: #ffb04a; --hot: #ff6a2b; --ink: #fff6ea; --glass: rgba(24, 14, 30, 0.55); --line: rgba(255, 220, 190, 0.18); color-scheme: dark; }
+@font-face { font-family: 'Pretendard Variable'; src: url('./fonts/PretendardVariable.woff2') format('woff2'); font-weight: 45 920; font-style: normal; font-display: swap; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #2a1830; font-family: 'Pretendard Variable', system-ui, -apple-system, 'Segoe UI', Inter, sans-serif; color: var(--ink); user-select: none; -webkit-user-select: none; touch-action: none; }
+canvas#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; outline: none; cursor: crosshair; }
+#loading { position: fixed; inset: 0; display: grid; place-items: center; font-size: 15px; opacity: .8; background: linear-gradient(#2a1830, #b0533e); }
+.panel { background: var(--glass); border: 1px solid var(--line); border-radius: 12px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+button { font: inherit; color: var(--ink); background: rgba(255,255,255,.08); border: 1px solid var(--line); border-radius: 10px; padding: 10px 18px; cursor: pointer; transition: background .15s, transform .15s; }
+button:hover { background: rgba(255,176,74,.22); transform: translateY(-1px); }
+button.primary { background: linear-gradient(180deg, #ffb04a, #f2702e); color: #2a1210; border: none; font-weight: 700; }
+button.primary:hover { filter: brightness(1.08); }
+/* the button a gamepad would press (see src/ui/padmenu.ts) */
+.padfocus { outline: 3px solid #ffe2a8; outline-offset: 3px; }
+/* title */
+#title { position: fixed; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 60%, rgba(20,10,24,0) 0%, rgba(20,10,24,.45) 70%); transition: opacity .5s; }
+#title.gone { opacity: 0; pointer-events: none; }
+#title .box { text-align: center; padding: 28px 36px; }
+#title h1 { margin: 0; font-size: clamp(44px, 8vw, 104px); letter-spacing: .08em; font-weight: 900; line-height: .95; background: linear-gradient(180deg, #fff3d6 10%, #ffb04a 55%, #e2482a 95%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 24px rgba(255,120,40,.45)); }
+#title p.tag { margin: 12px 0 26px; font-size: clamp(14px, 1.6vw, 19px); opacity: .9; }
+#title .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+#title .row2 { margin-top: 10px; }
+#title .small { margin-top: 22px; font-size: 12px; opacity: .65; }
+/* hud */
+#hud { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .4s; }
+#hud.on { opacity: 1; }
+#meters { position: absolute; left: 14px; top: 14px; padding: 10px 12px; width: 200px; font-size: 12px; }
+.meter { margin: 3px 0 7px; } .meter .lbl { display: flex; justify-content: space-between; opacity: .85; }
+.bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; margin-top: 3px; }
+.bar i { display: block; height: 100%; border-radius: 3px; }
+#m-town { background: linear-gradient(90deg, #f2702e, #ffd38a); } #m-sea { background: linear-gradient(90deg, #2d7fbf, #8fe3ff); } #m-hp { background: linear-gradient(90deg, #e2482a, #ffb04a); }
+#obj { position: absolute; right: 14px; top: 14px; padding: 10px 14px; max-width: 340px; text-align: right; }
+#obj-text { font-weight: 700; font-size: 15px; } #obj-sub { font-size: 12px; opacity: .78; margin-top: 3px; }
+#powers { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 6px; }
+.pw { display: flex; gap: 8px; align-items: center; padding: 6px 10px; border-radius: 10px; background: var(--glass); border: 1px solid var(--line); font-size: 11px; opacity: .8; transition: all .12s; }
+.pw b { display: block; font-size: 12px; } .pw span { opacity: .7; } .pw b, .pw span { word-break: keep-all; }
+.pw-i { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; background: rgba(255,176,74,.18); font-weight: 700; }
+.pw.on { opacity: 1; border-color: var(--accent); box-shadow: 0 0 18px rgba(255,150,60,.45); transform: translateY(-3px); }
+#tut { position: absolute; left: 50%; top: 16px; transform: translate(-50%, -12px); padding: 12px 16px; max-width: 520px; opacity: 0; transition: all .3s; pointer-events: auto; }
+#tut.on { opacity: 1; transform: translate(-50%, 0); }
+#tut-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+#tut-title { font-weight: 800; font-size: 17px; color: var(--accent); } #tut-step { font-size: 11px; opacity: .7; }
+#tut-body { font-size: 14px; margin-top: 5px; line-height: 1.4; }
+#skip-tut { margin-top: 8px; padding: 4px 10px; font-size: 11px; }
+#toast { position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%); font-size: clamp(18px, 2.4vw, 30px); font-weight: 800; letter-spacing: .02em; text-shadow: 0 2px 18px rgba(0,0,0,.5); opacity: 0; white-space: nowrap; }
+#toast.show { animation: toast 2.6s ease-out; }
+@keyframes toast { 0% { opacity: 0; transform: translate(-50%, -40%) scale(.96); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -56%); } }
+#cursor { position: fixed; left: 0; top: 0; width: 0; height: 0; pointer-events: none; display: none; z-index: 5; }
+#cursor::before, #cursor::after { content: ''; position: absolute; background: #fff6ea; box-shadow: 0 0 6px rgba(255,150,60,.9); }
+#cursor::before { left: -11px; top: -1px; width: 22px; height: 2px; } #cursor::after { left: -1px; top: -11px; width: 2px; height: 22px; }
+#cursor i { position: absolute; left: -4px; top: -4px; width: 6px; height: 6px; border: 1px solid #ffb04a; border-radius: 50%; }
+#gripring { position: absolute; left: 0; top: 0; border-radius: 50%; border: 2px dashed rgba(190,170,255,.9); box-shadow: 0 0 14px rgba(150,120,255,.55); display: none; }
+#gripring.holding { border-style: solid; border-color: rgba(200,180,255,.95); }
+body.playing canvas#view { cursor: none; }
+.reticle { position: absolute; border-radius: 50%; transform: translate(-50%, -50%); border: 2px dashed rgba(190,170,255,.85); box-shadow: 0 0 18px rgba(150,120,255,.5) inset; display: none; }
+#hint { position: absolute; right: 14px; bottom: 14px; font-size: 11px; opacity: .55; }
+/* modal cards */
+.modal { position: fixed; inset: 0; display: none; place-items: center; background: rgba(16,8,20,.45); pointer-events: auto; }
+.modal.open { display: grid; }
+.card { padding: 20px 24px; min-width: 320px; max-width: 620px; }
+.card h2 { margin: 0 0 12px; font-size: 22px; color: var(--accent); }
+#help-table { border-collapse: collapse; font-size: 13px; width: 100%; } #help-table td { padding: 5px 10px; border-bottom: 1px solid var(--line); } #help-table td:first-child { font-weight: 700; } #help-table td:last-child { opacity: .7; }
+.card .row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.rr { display: flex; justify-content: space-between; gap: 30px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 15px; } .rr b { color: var(--accent); }
+label.vol { display: flex; gap: 10px; align-items: center; font-size: 13px; margin-top: 12px; }
+
+/* combat HUD: style rank, combo banner, boss bar */
+#style { position: fixed; right: 16px; top: 96px; display: none; gap: 10px; align-items: center; padding: 8px 12px; min-width: 150px; }
+#hud.on #style.on { display: flex; }
+#style-rank { font-size: 38px; font-weight: 900; line-height: 1; width: 34px; text-align: center; color: #ffd28a; text-shadow: 0 2px 14px rgba(255,140,40,.5); transition: transform .15s; }
+#style-rank.bump { transform: scale(1.3); }
+#style-rank.rS { color: #fff2c0; } #style-rank.rA { color: #ffb04a; } #style-rank.rB { color: #ff9a6a; } #style-rank.rC { color: #d9b8ff; } #style-rank.rD { color: #c8c0d0; }
+#style-side { flex: 1; } #style-side .bar { height: 5px; } #style-bar { background: linear-gradient(90deg, #ff7a3a, #ffd28a); }
+#style-combo { font-size: 13px; font-weight: 800; margin-top: 5px; } #style-move { font-size: 11px; opacity: .75; min-height: 14px; }
+#banner { position: fixed; left: 50%; top: 22%; transform: translate(-50%, -8px); text-align: center; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
+#banner.show { opacity: 1; transform: translate(-50%, 0); }
+#banner b { display: block; font-size: clamp(26px, 4vw, 44px); font-weight: 900; letter-spacing: .06em; color: #ffe0a0; text-shadow: 0 3px 20px rgba(255,120,40,.6); }
+#banner span { font-size: 14px; opacity: .9; }
+#bossbar { position: fixed; left: 50%; bottom: 92px; transform: translateX(-50%); width: min(520px, 70vw); display: none; text-align: center; }
+#hud.on #bossbar.on { display: block; }
+#boss-name { font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 4px; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+#bossbar .bar { height: 4px; } #boss-fill { background: linear-gradient(90deg, #ff5a2a, #ffc070); transition: width .3s; }
+#boss-hint { font-size: 12px; opacity: .85; margin-top: 4px; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+</style>
+</head>
+<body>
+<canvas id="view" tabindex="0"></canvas>
+<div id="loading">섬을 가열하는 중…</div>
+<div id="hud">
+	<div id="meters" class="panel">
+		<div class="meter" id="meter-town"><div class="lbl"><span>마을 상태</span><span id="m-town-v">100%</span></div><div class="bar"><i id="m-town" style="width:100%"></i></div></div>
+		<div class="meter" id="meter-sea"><div class="lbl"><span>해수면</span><span id="m-sea-v">100%</span></div><div class="bar"><i id="m-sea" style="width:100%"></i></div></div>
+		<div class="meter"><div class="lbl"><span>주인공</span></div><div class="bar"><i id="m-hp" style="width:100%"></i></div></div>
+	</div>
+	<div id="obj" class="panel"><div id="obj-text">신더 타이드</div><div id="obj-sub"></div></div>
+	<div id="tut" class="panel"><div id="tut-head"><span id="tut-title"></span><span id="tut-step"></span></div><div id="tut-body"></div><button id="skip-tut">튜토리얼 건너뛰기</button></div>
+	<div id="toast"></div>
+	<div id="banner"><b id="banner-name"></b><span id="banner-sub"></span></div>
+	<div id="style" class="panel"><div id="style-rank">D</div><div id="style-side"><div class="bar"><i id="style-bar"></i></div><div id="style-combo"></div><div id="style-move"></div></div></div>
+	<div id="bossbar"><div id="boss-name"></div><div class="bar"><i id="boss-fill"></i></div><div id="boss-hint"></div></div>
+	<div id="reticle" class="reticle"></div>
+	<div id="cursor"><i></i><div id="gripring"></div></div>
+	<div id="powers"></div>
+	<div id="hint">H 조작법 · Esc 메뉴</div>
+</div>
+<div id="title">
+	<div class="box">
+		<h1>CINDER<br>TIDE</h1>
+		<p class="tag">바다를 끓이고, 산을 던지고, 마을을 지키세요 (대충이라도).</p>
+		<div class="row"><button id="play-story" class="primary">플레이</button><button id="play-arena">아레나</button><button id="play-titan">보스: 마그마 타이탄</button><button id="play-leviathan">보스: 폭풍 리바이어던</button></div>
+		<div class="row row2"><button id="play-sandbox">샌드박스</button><button id="title-controls">조작법</button></div>
+		<div class="small">모든 픽셀이 시뮬레이션됩니다: 바위, 모래, 물, 용암, 증기, 구름, 얼음. 마우스 + 키보드 또는 게임패드.</div>
+	</div>
+</div>
+<div id="help" class="modal"><div class="card panel"><h2>조작법</h2><table id="help-table"></table><div class="row"><button id="help-close" class="primary">확인</button></div></div></div>
+<div id="pause" class="modal"><div class="card panel"><h2>일시정지</h2>
+	<div class="row"><button id="pause-resume" class="primary">계속하기</button><button id="pause-controls">조작법</button><button id="pause-spawn">적 생성</button><button id="pause-restart">다시 시작</button></div>
+	<label class="vol">볼륨 <input id="volume" type="range" min="0" max="1" step="0.05" value="0.8"></label>
+	<label class="vol">음악 <input id="music" type="range" min="0" max="0.4" step="0.01" value="0.11"></label></div></div>
+<div id="report" class="modal"><div class="card panel"><h2 id="report-title">결과</h2><div id="report-rows"></div><div class="row"><button id="report-keep" class="primary">계속 플레이</button><button id="report-again">다시 하기</button></div></div></div>
+<script type="module" src="./src/main.ts"></script>
+<script src="patch-credits.js" defer></script>
+</body>
+</html>
