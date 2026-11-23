@@ -351,13 +351,13 @@ export class Enemies {
 	// a frozen enemy hit by the lance: the ice flashes to steam and it blows apart
 	steamBomb(m: Mob, i: number) {
 		const x = i % this.w.W, y = (i / this.w.W) | 0;
-		this.ev('combo', m, x, y, { name: 'Steam Bomb' });
+		this.ev('combo', m, x, y, { name: '스팀 밤' });
 		for (const p of m.parts) for (const c of p.cells) if (c.alive) { const q = c.wi >= 0 ? { x: c.wi % this.w.W, y: (c.wi / this.w.W) | 0 } : this.worldOf(m, p, c.lx, c.ly); const a = Math.atan2(q.y - y, q.x - x); this.release(m, c, Math.cos(a) * (40 + rnd() * 50), Math.sin(a) * (40 + rnd() * 50) - 20, true, rnd() < 0.5 ? S.STEAM : c.t); }
 		this.w.explode(x, y, 9, 0.9, false);
 		for (const o of this.list) if (o !== m && !o.dead) { const c = this.center(o); const d = Math.hypot(c.x - x, c.y - y); if (d < 30) this.hit(o, c.x, c.y, 40 * (1 - d / 30), 'steam', Math.sign(c.x - x), -0.5); }
 		this.kill(m, 'steam', true);
 	}
-	juggle(m: Mob, dx: number) { m.vy = Math.min(m.vy, -14); m.vx += dx * 2; m.launched = Math.max(m.launched, 0.5); m.juggles++; if (m.juggles === 12) this.ev('combo', m, m.x, m.y, { name: 'Juggle' }); }
+	juggle(m: Mob, dx: number) { m.vy = Math.min(m.vy, -14); m.vx += dx * 2; m.launched = Math.max(m.launched, 0.5); m.juggles++; if (m.juggles === 12) this.ev('combo', m, m.x, m.y, { name: '저글' }); }
 	coldCell(i: number, amount: number) {
 		const o = this.mobCell(i); if (!o) return false; const [m, c] = o;
 		if (m.boss) { this.bossCold?.(m, c, amount); return true; }
@@ -378,7 +378,7 @@ export class Enemies {
 		this.chunk(m, all, { x: dx * 30, y: dy * 20 - 15 }, 3);
 		this.kill(m, kind, true);
 		this.ev('shatter', m, m.x, m.y - 5, { name: kind });
-		if (kind === 'slam') this.ev('combo', m, m.x, m.y - 5, { name: 'Shatterfall' });
+		if (kind === 'slam') this.ev('combo', m, m.x, m.y - 5, { name: '셰터폴' });
 	}
 	detachPlate(m: Mob, k: number, vx: number, vy: number, torn: boolean) {
 		const pl = m.plates[k]; if (!pl.alive) return null; pl.alive = false;
@@ -395,7 +395,7 @@ export class Enemies {
 		for (const c of p.cells) if (c.alive) { const a = a0 + (rnd() - 0.5) * 2.4; const sp = 8 + rnd() * 26 + amount * 0.15; this.release(m, c, Math.cos(a) * sp, Math.sin(a) * sp - 10, true, glass ? S.SHARD : S.SAND); }
 		p.alive = false; p.deadT = 0; p.heat = 0;
 		if (glass) { p.reforms = 0; this.ev('shatter', m, q.x, q.y, { name: 'glass' }); } else { this.stats.scattered++; this.ev('scatter', m, q.x, q.y, { name: kind }); }
-		if (kind === 'dash') { m.data.dashScatter = (m.data.dashScatter || 0) + 1; if (m.data.dashScatter >= 3) { m.data.dashScatter = -99; this.ev('combo', m, q.x, q.y, { name: 'Sandstorm' }); } }
+		if (kind === 'dash') { m.data.dashScatter = (m.data.dashScatter || 0) + 1; if (m.data.dashScatter >= 3) { m.data.dashScatter = -99; this.ev('combo', m, q.x, q.y, { name: '샌드스톰' }); } }
 		if (m.parts.every(pp => !pp.alive && pp.reforms <= 0)) this.kill(m, kind);
 	}
 	kill(m: Mob, kind: string, quiet = false) {
@@ -547,7 +547,7 @@ export class Enemies {
 			else this.swarm(m, dt, hero);
 			// thrown enemies hit others
 			if (m.thrown > 0 && Math.hypot(m.vx, m.vy) > 20) {
-				for (const o of this.list) { if (o === m || o.dead) continue; const a = this.center(o), b = this.center(m); if (Math.hypot(a.x - b.x, a.y - b.y) < o.r + m.r * 0.7) { const v = Math.hypot(m.vx, m.vy); this.hit(o, a.x, a.y, 30 + v * 0.8, 'thrown', Math.sign(m.vx), -0.4); this.hit(m, b.x, b.y, 20 + v * 0.5, 'thrown', -Math.sign(m.vx), -0.4); this.ev('combo', o, a.x, a.y, { name: 'Strike' }); m.thrown = 0; m.vx *= -0.3; break; } }
+				for (const o of this.list) { if (o === m || o.dead) continue; const a = this.center(o), b = this.center(m); if (Math.hypot(a.x - b.x, a.y - b.y) < o.r + m.r * 0.7) { const v = Math.hypot(m.vx, m.vy); this.hit(o, a.x, a.y, 30 + v * 0.8, 'thrown', Math.sign(m.vx), -0.4); this.hit(m, b.x, b.y, 20 + v * 0.5, 'thrown', -Math.sign(m.vx), -0.4); this.ev('combo', o, a.x, a.y, { name: '스트라이크' }); m.thrown = 0; m.vx *= -0.3; break; } }
 			}
 		}
 		for (const a of this.list) { if (a.dead || a.boss || a.kind === 'swarm' || a.held) continue; for (const b of this.list) { if (b === a || b.dead || b.boss || b.kind === 'swarm' || b.held) continue; const ca = this.center(a), cb = this.center(b), dx = ca.x - cb.x, dy = ca.y - cb.y, d = Math.hypot(dx, dy), min = (a.r + b.r) * 0.75; if (d < min && d > 0.01) { const push = (min - d) * 0.25 / a.mass * Math.min(1, a.mass + b.mass); a.x += dx / d * push; if (a.kind === 'wraith') a.y += dy / d * push; } } }
@@ -746,4 +746,4 @@ export class Enemies {
 			else if (s.kind === 'ice') { r.cap(s.x, s.y, s.x - s.vx / l * 3.5, s.y - s.vy / l * 3.5, 0.55, 0.2, [0.85, 0.97, 1, 1], [1.5, 3, 4.5], false); }
 		}
 	}
-}
+																															  }
