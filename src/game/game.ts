@@ -9,7 +9,7 @@ import { buildArena, buildRunway, townCells, type ArenaInfo } from './arena';
 import { Fx } from './fx';
 import { Enemies, type Mob } from './enemies';
 import { Bosses } from './bosses';
-import { Style, COMBOS } from './combat';
+import { Style, COMBOS, MOVE_KO } from './combat';
 import { Powers } from './powers';
 import { Input, type Intent } from './input';
 import { Sound } from '../audio/audio';
@@ -28,14 +28,14 @@ const ARENA_WAVES: [string, number][][] = [
 	[['crawler', 4], ['brute', 2], ['wraith', 2], ['swarm', 2]],
 ];
 const TUTORIAL = [
-	{ t: 'Move and jump', b: 'A and D to run, Space to jump. Gamepad: left stick and A.', p: 'Left stick to run, {A} to jump.', done: (g: Game) => g.tut.moved > 60 && g.tut.jumped },
-	{ t: 'Fly', b: 'Press Space again in the air to fly. Steer with W A S D. C stops flying.', p: 'Press {A} again in the air to fly. Steer with the left stick. {Y} stops flying.', done: (g: Game) => g.tut.flyTime > 1.2 },
-	{ t: 'Boil the sea', b: 'Hold the left mouse button over the sea: the Magma Lance boils it into steam. Watch the steam rise into clouds.', p: 'Aim at the sea with the right stick and hold {RT}: the Magma Lance boils it into steam. Watch the steam rise into clouds.', done: (g: Game) => g.w.stats.boiled - g.tut.boil0 > 600 },
-	{ t: 'Lava Blast', b: 'Hold the right mouse button to charge, release to blast.', p: 'Hold {LT} to charge, release to blast.', done: (g: Game) => g.powers.stats.blasts > 0 },
-	{ t: 'Grip', b: 'Point at rock and hold E to tear out what is inside the circle, then flick the mouse and let go to throw it (scroll to resize the circle).', p: 'Aim at rock and hold {RB} to tear out what is inside the circle, then flick the right stick and let go to throw it (d-pad up or down with {RB} resizes the circle).', done: (g: Game) => g.powers.stats.throws > 0 },
-	{ t: 'Rime Burst', b: 'Hold F to freeze. Freeze the sea, or freeze a cloud into snow.', p: 'Hold {LB} to freeze. Freeze the sea, or freeze a cloud into snow.', done: (g: Game) => g.w.stats.frozen - g.tut.frozen0 > 150 || g.powers.stats.rimeFrames > 90 },
-	{ t: 'Meteor Drop', b: 'Press Q (in the air, or on the ground to leap first) to dive and slam.', p: 'Press {X} (in the air, or on the ground to leap first) to dive and slam.', done: (g: Game) => g.powers.stats.slams > 0 },
-	{ t: 'Phase Dash', b: 'Shift dashes toward the cursor and carves a tunnel through rock. Metal, basalt and obsidian stop you.', p: '{B} dashes toward where you aim and carves a tunnel through rock. Metal, basalt and obsidian stop you.', done: (g: Game) => g.powers.stats.dashes > 0 },
+	{ t: '이동과 점프', b: 'A와 D로 달리고, Space로 점프합니다. 게임패드: 왼쪽 스틱과 A.', p: '왼쪽 스틱으로 달리고, {A}로 점프합니다.', done: (g: Game) => g.tut.moved > 60 && g.tut.jumped },
+	{ t: '비행', b: '공중에서 Space를 한 번 더 누르면 납니다. W A S D로 조종하고, C로 비행을 멈춥니다.', p: '공중에서 {A}를 한 번 더 누르면 납니다. 왼쪽 스틱으로 조종하고, {Y}로 비행을 멈춥니다.', done: (g: Game) => g.tut.flyTime > 1.2 },
+	{ t: '바다 끓이기', b: '바다 위에서 왼쪽 마우스를 유지하세요: 마그마 랜스가 바다를 증기로 끓입니다. 증기가 구름으로 올라가는 걸 지켜보세요.', p: '오른쪽 스틱으로 바다를 조준하고 {RT}를 유지하세요: 마그마 랜스가 바다를 증기로 끓입니다. 증기가 구름으로 올라가는 걸 지켜보세요.', done: (g: Game) => g.w.stats.boiled - g.tut.boil0 > 600 },
+	{ t: '라바 블래스트', b: '오른쪽 마우스를 유지해 충전하고, 놓아서 발사합니다.', p: '{LT}를 유지해 충전하고, 놓아서 발사합니다.', done: (g: Game) => g.powers.stats.blasts > 0 },
+	{ t: '그립', b: '바위를 가리키고 E를 유지하면 원 안이 뜯겨 나옵니다. 마우스를 튕기듯 움직이며 놓으면 던집니다 (스크롤로 원 크기 조절).', p: '바위를 조준하고 {RB}를 유지하면 원 안이 뜯겨 나옵니다. 오른쪽 스틱을 튕기듯 움직이며 놓으면 던집니다 ({RB}를 누른 채 십자키 위아래로 원 크기 조절).', done: (g: Game) => g.powers.stats.throws > 0 },
+	{ t: '라임 버스트', b: 'F를 유지해 얼립니다. 바다를 얼리거나, 구름을 얼려 눈으로 만들 수 있습니다.', p: '{LB}를 유지해 얼립니다. 바다를 얼리거나, 구름을 얼려 눈으로 만들 수 있습니다.', done: (g: Game) => g.w.stats.frozen - g.tut.frozen0 > 150 || g.powers.stats.rimeFrames > 90 },
+	{ t: '메테오 드롭', b: 'Q를 눌러 급강하해 내리꽂습니다 (지상에서는 먼저 뛰어오릅니다).', p: '{X}를 눌러 급강하해 내리꽂습니다 (지상에서는 먼저 뛰어오릅니다).', done: (g: Game) => g.powers.stats.slams > 0 },
+	{ t: '페이즈 대시', b: 'Shift로 커서 방향으로 대시하며 바위를 뚫고 지나갑니다. 금속, 현무암, 흑요석은 막힙니다.', p: '{B}로 조준 방향으로 대시하며 바위를 뚫고 지나갑니다. 금속, 현무암, 흑요석은 막힙니다.', done: (g: Game) => g.powers.stats.dashes > 0 },
 ];
 
 export class Game {
@@ -60,7 +60,7 @@ export class Game {
 		this.ui.onPlay = m => this.begin(m);
 		this.ui.onSkip = () => this.endTutorial();
 		this.ui.onRestart = () => this.restart();
-		this.ui.onKeep = () => { this.done = true; this.ui.objective('Keep wrecking', `Everything still works. ${this.menuKey()} for the menu.`); };
+		this.ui.onKeep = () => { this.done = true; this.ui.objective('마음껏 파괴하세요', `모든 기능이 그대로 동작합니다. 메뉴는 ${this.menuKey()}.`); };
 		this.ui.onSpawn = () => this.spawnWave(Math.max(1, this.wave));
 		this.ui.onVolume = v => this.sound.setVolume(v);
 		this.ui.onMusic = v => { this.sound.musicLevel = v; };
@@ -109,18 +109,18 @@ export class Game {
 		this.mode = m; this.ui.bossBar(false); this.ui.clearPrompts();
 		this.ui.meterSet(m === 'story' || m === 'sandbox', m === 'story' || m === 'sandbox' || m === 'leviathan'); this.ui.hideTitle(this.testMode); document.body.classList.add('playing'); this.sound.start(); this.started = true;
 		if (m === 'story') { this.tut.step = 0; this.tut.boil0 = this.w.stats.boiled; this.tut.frozen0 = this.w.stats.frozen; this.showTut(); }
-		else if (m === 'sandbox') { this.tut.step = -1; this.ui.prompt(null); this.ui.objective('Sandbox', `Every power, no fail. ${this.menuKey()} for the menu (spawn enemies there).`); }
+		else if (m === 'sandbox') { this.tut.step = -1; this.ui.prompt(null); this.ui.objective('샌드박스', `모든 능력 사용, 실패 없음. 메뉴는 ${this.menuKey()} (적 생성도 메뉴에서).`); }
 		else { this.tut.step = -1; this.ui.prompt(null); this.beginCombat(m); }
 	}
 	showTut() {
 		const s = TUTORIAL[this.tut.step];
 		if (!s) { this.endTutorial(); return; }
 		this.ui.prompt(s.t, this.input.usingPad ? this.input.padText(s.p) : s.b, `${this.tut.step + 1} / ${TUTORIAL.length}`);
-		this.ui.objective('Learn your powers', 'Skip the tutorial any time.');
+		this.ui.objective('능력 익히기', '튜토리얼은 언제든 건너뛸 수 있습니다.');
 	}
 	endTutorial() {
 		this.tut.step = -1; this.ui.prompt(null);
-		if (this.mode === 'story') { this.ui.toast('Magma crawlers are climbing out of the volcano. Protect the town!'); this.waveTimer = 3; this.sound.play('objective'); }
+		if (this.mode === 'story') { this.ui.toast('마그마 크롤러가 화산에서 기어 나옵니다. 마을을 지키세요!'); this.waveTimer = 3; this.sound.play('objective'); }
 	}
 	// the bay is open to the ocean: during the Leviathan's fight the ocean holds the bay at sea level, filling it back
 	// from the bottom up (a few hundred cells a tick), so the fight never drains the bay it's fought in
@@ -135,16 +135,16 @@ export class Game {
 		if (m === 'arena') { // the plateau, cleared of the town: an open arena
 			{ const w = this.w; for (let xx = 680; xx < 1105; xx++) for (let yy = 30; yy < a.ground[xx] - 1; yy++) { const i = yy * w.W + xx; if (w.type[i] !== S.AIR && w.type[i] !== S.WATER) w.type[i] = S.AIR; else if (w.type[i] === S.WATER) w.type[i] = S.AIR; } w.wakeAll(); this.townInit = 1; }
 			this.enemies.leash = { x0: 700, x1: 1090, ground: a.ground };
-			this.teleportHero(860, a.ground[860] - 1, false); this.ui.objective('Arena', 'Three waves. Use the right power on each enemy.'); this.ui.toast('Arena: three waves are coming'); }
+			this.teleportHero(860, a.ground[860] - 1, false); this.ui.objective('아레나', '웨이브 3번. 각 적에 맞는 능력을 쓰세요.'); this.ui.toast('아레나: 세 번의 웨이브가 몰려옵니다'); }
 		if (m === 'titan') {
 			this.teleportHero(1300, a.ground[1300] - 40, true); h.face = 1;
 			const cx = a.volcano.x; let gy = 20; while (gy < this.w.H - 5 && S.ST[this.w.get(cx, gy)] !== S.SOLID && S.ST[this.w.get(cx, gy)] !== S.LIQUID) gy++;
-			this.bosses.spawnTitan(cx, gy + 2); this.ui.objective('The Magma Titan', 'Cool an arm with Rime Burst, then break it off.');
+			this.bosses.spawnTitan(cx, gy + 2); this.ui.objective('마그마 타이탄', '라임 버스트로 팔을 식힌 뒤 부러뜨리세요.');
 		}
 		if (m === 'leviathan') {
 			this.teleportHero(560, a.sea - 40, true); h.face = -1;
 			const lv = this.bosses.spawnLeviathan(300, a.sea + 30); lv.data.sea = a.sea; lv.data.shore = 430;
-			this.ui.objective('The Storm Leviathan', 'Boil its body away with the Magma Lance.');
+			this.ui.objective('폭풍 리바이어던', '마그마 랜스로 몸을 끓여 없애세요.');
 		}
 		this.cam.x = h.x - this.viewW() / 2; this.cam.y = h.y - this.viewH * 0.6;
 		this.sound.play('objective');
@@ -162,7 +162,7 @@ export class Game {
 		const list = ARENA_WAVES[Math.min(ARENA_WAVES.length - 1, n - 1)]; let k = 0;
 		for (const [kind, c] of list) for (let q = 0; q < c; q++) { const side = k++ % 2 ? 1 : -1; const x = 860 + side * (150 + Math.random() * 90); this.spawnAt(kind, Math.max(700, Math.min(1090, x))); }
 		this.waveActive = true; this.wave = n;
-		this.ui.toast(`Wave ${n} of ${ARENA_WAVES.length}`); this.sound.play('objective');
+		this.ui.toast(`웨이브 ${n}/${ARENA_WAVES.length}`); this.sound.play('objective');
 	}
 	spawnWave(n: number) {
 		if (this.mode === 'arena') { this.spawnArena(n); return; }
@@ -170,7 +170,7 @@ export class Game {
 		if (this.mode !== 'story') { // sandbox: a mixed handful near the hero
 			const h = this.hero; let k = 0;
 			for (const kind of ['crawler', 'crawler', 'brute', 'wraith', 'swarm']) { const x = h.x + (k++ % 2 ? 1 : -1) * (60 + k * 14); this.spawnAt(kind, Math.max(40, Math.min(this.w.W - 40, x))); }
-			this.waveActive = true; this.wave = n; this.ui.toast('Enemies incoming'); return;
+			this.waveActive = true; this.wave = n; this.ui.toast('적이 몰려옵니다'); return;
 		}
 		const crawlers = 2 + n * 2, moths = 0;
 		if (n >= 2) for (let k = 0; k < n - 1; k++) this.enemies.spawn('wraith', a.crater.x - 40 - k * 20, a.crater.y - 50);
@@ -178,7 +178,7 @@ export class Game {
 		for (let k = 0; k < crawlers; k++) { const x = a.volcano.x - 90 - k * 14 + Math.random() * 10; let y = 20; while (y < this.w.H - 5 && !(S.ST[this.w.get(Math.floor(x), y)] === S.SOLID || S.ST[this.w.get(Math.floor(x), y)] === S.POWDER)) y++; this.enemies.spawn('crawler', x, y - 1); }
 		for (let k = 0; k < moths; k++) this.enemies.spawn('moth', a.crater.x - 20 + k * 10, a.crater.y - 30);
 		this.waveActive = true; this.wave = n;
-		this.ui.toast(`Wave ${n} of ${this.totalWaves}`); this.sound.play('objective');
+		this.ui.toast(`웨이브 ${n}/${this.totalWaves}`); this.sound.play('objective');
 	}
 	// ---------------------------------------------------------------- loop
 	frameLoop = (now: number) => {
@@ -258,7 +258,7 @@ export class Game {
 		this.hurtT += DT; this.style.tick(DT);
 		const combat = this.mode === 'arena' || this.mode === 'titan' || this.mode === 'leviathan';
 		this.health = hero.health = Math.min(100, hero.health + DT * (combat ? (this.hurtT > 3 ? 2.5 : 0) : 4));
-		if (hero.health <= 0) { if (combat && !this.result) this.lose(); else if (!combat) { hero.health = 60; hero.knock(0, -10); this.ui.toast('Knocked flat! Up you get.'); } else hero.health = 1; }
+		if (hero.health <= 0) { if (combat && !this.result) this.lose(); else if (!combat) { hero.health = 60; hero.knock(0, -10); this.ui.toast('쓰러졌습니다! 일어나세요.'); } else hero.health = 1; }
 		this.dmg.minHealth = Math.min(this.dmg.minHealth, hero.health);
 		this.combatHud();
 		if (this.mode === 'leviathan') this.tideIn();
@@ -367,7 +367,7 @@ export class Game {
 					break;
 				}
 				case 'clank': s.play('clank', { pan, vol: 0.6 }); fx.burst(e.x, e.y, 6, 50, [5, 4, 3]); break;
-				case 'shrug': fx.burst(e.x, e.y, 4, 30, k === 'wraith' ? [1, 2, 3.5] : [6, 2, 0.4]); if (Math.random() < 0.15 && !this.testMode) this.ui.toast(k === 'wraith' ? 'Cold only feeds the wraith' : k === 'crawler' ? 'Lava shrugs off heat: freeze it' : k === 'titan' ? 'Too hot to break: cool it first' : 'No effect'); break;
+				case 'shrug': fx.burst(e.x, e.y, 4, 30, k === 'wraith' ? [1, 2, 3.5] : [6, 2, 0.4]); if (Math.random() < 0.15 && !this.testMode) this.ui.toast(k === 'wraith' ? '냉기는 레이스를 키울 뿐입니다' : k === 'crawler' ? '용암은 열기에 끄떡없습니다: 얼리세요' : k === 'titan' ? '너무 뜨거워 부술 수 없습니다: 먼저 식히세요' : '효과 없음'); break;
 				case 'die': {
 					this.killsByKind[k] = (this.killsByKind[k] ?? 0) + 1; this.deathLog.push({ kind: k, how: e.name ?? '', t: this.time });
 					st.move('kill', k === 'brute' ? 2 : 1);
@@ -389,10 +389,10 @@ export class Game {
 				case 'lunge': s.play('whoosh', { pan }); break;
 				case 'freeze': st.move('freeze'); s.play('freeze', { pan }); s.play('ice', { pan }); fx.burst(e.x, e.y, 20, 60, [1.5, 2.5, 4]); break;
 				case 'thaw': s.play('sizzle', { pan, vol: 0.5 }); break;
-				case 'shatter': s.play('shatter', { pan }); s.play('iceBreak', { pan }); this.hitstop(0.08); this.shake(0.55); fx.burst(e.x, e.y, 40, 120, [1.6, 2.4, 3.6]); if (k === 'crawler') this.combo('Icebreaker', e.x, e.y); break;
-				case 'plateTorn': s.play('tear', { pan }); this.shake(0.4); if (k === 'brute') this.combo('Disarm', e.x, e.y); break;
+				case 'shatter': s.play('shatter', { pan }); s.play('iceBreak', { pan }); this.hitstop(0.08); this.shake(0.55); fx.burst(e.x, e.y, 40, 120, [1.6, 2.4, 3.6]); if (k === 'crawler') this.combo('아이스브레이커', e.x, e.y); break;
+				case 'plateTorn': s.play('tear', { pan }); this.shake(0.4); if (k === 'brute') this.combo('디스암', e.x, e.y); break;
 				case 'plateCrack': s.play('rock', { pan }); this.shake(0.4); fx.burst(e.x, e.y, 20, 80, [5, 4, 3]); break;
-				case 'heartOpen': s.play('roar', { pan, vol: 0.6 }); this.ui.toast('Its heart is open'); break;
+				case 'heartOpen': s.play('roar', { pan, vol: 0.6 }); this.ui.toast('심장이 열렸습니다'); break;
 				case 'melt': s.play('melt', { pan }); fx.puff(e.x, e.y, 2, 6, [1, 1, 1, 0.3], 1.6); break;
 				case 'refreeze': if (Math.random() < 0.3) s.play('freeze', { pan, vol: 0.3 }); break;
 				case 'fuse': s.play('sizzle', { pan }); fx.glow(e.x, e.y, 5, 0.3, [4, 2.5, 1]); break;
@@ -401,19 +401,19 @@ export class Game {
 				case 'reform': s.play('crumble', { pan, vol: 0.35 }); break;
 				case 'combo': this.combo(e.name ?? '', e.x, e.y); break;
 				case 'hurtHero': this.hurtT = 0; this.dmg.taken += e.v ?? 0; this.dmg.hits++; this.dmg.byKind[e.name ?? '?'] = (this.dmg.byKind[e.name ?? '?'] ?? 0) + (e.v ?? 0); st.hurt(e.v ?? 10); s.play('hurt'); this.shake(0.45); this.flashV = Math.max(this.flashV, 0.06); break;
-				case 'bossIntro': this.ui.banner(e.name ?? '', 'Boss'); s.play('roar', { pan }); this.shake(0.6); break;
-				case 'bossPhase': this.ui.banner(e.name ?? '', 'Next phase'); s.play('roar', { pan }); this.shake(0.8); this.flashV = Math.max(this.flashV, 0.1); this.hitstop(0.1); break;
+				case 'bossIntro': this.ui.banner(e.name ?? '', '보스'); s.play('roar', { pan }); this.shake(0.6); break;
+				case 'bossPhase': this.ui.banner(e.name ?? '', '다음 단계'); s.play('roar', { pan }); this.shake(0.8); this.flashV = Math.max(this.flashV, 0.1); this.hitstop(0.1); break;
 				case 'bossThrow': s.play('whoosh', { pan, size: 1 }); break;
 				case 'bossSwipe': s.play('whoosh', { pan, size: 1 }); s.play('dash', { pan }); this.shake(0.35); break;
 				case 'bossBreath': s.play('fireball', { pan }); s.play('release', { pan }); this.shake(0.3); break;
-				case 'limbCool': s.play('freeze', { pan }); s.play('sizzle', { pan }); if (!this.result) this.ui.toast('The arm has cooled: break it!'); break;
+				case 'limbCool': s.play('freeze', { pan }); s.play('sizzle', { pan }); if (!this.result) this.ui.toast('팔이 식었습니다: 부수세요!'); break;
 				case 'limbHot': s.play('fireball', { pan, vol: 0.4 }); break;
-				case 'limbCrack': s.play('rock', { pan }); this.shake(0.5); this.hitstop(0.06); if (!this.result) this.ui.toast('Cracked! One more blow'); break;
+				case 'limbCrack': s.play('rock', { pan }); this.shake(0.5); this.hitstop(0.06); if (!this.result) this.ui.toast('금이 갔습니다! 한 번 더'); break;
 				case 'limbBreak': st.move('blast', 3); s.play('shatter', { pan }); s.play('rock', { pan }); s.play('roar', { pan, vol: 0.8 }); this.hitstop(0.12); this.shake(1); this.flashV = Math.max(this.flashV, 0.12); break;
 				case 'coreShatter': st.move('blast', 3); s.play('shatter', { pan }); s.play('iceBreak', { pan }); this.hitstop(0.12); this.shake(1); fx.burst(e.x, e.y, 60, 150, [8, 4, 1.5]); break;
 				case 'bossDying': this.slowmo = 1.6; this.flashV = 0.2; s.play('roar', { pan }); this.shake(1); break;
 				case 'bossCrumble': s.play('rock', { pan, vol: 0.6 }); this.shake(0.4); break;
-				case 'bossDead': this.killsByKind[k] = 1; this.shake(1); this.flashV = 0.3; s.play('blast', { pan, size: 1.5 }); s.play('thunder', { pan, size: 1, vol: 1 }); this.ui.banner(`${e.name} is down`, 'Victory'); break;
+				case 'bossDead': this.killsByKind[k] = 1; this.shake(1); this.flashV = 0.3; s.play('blast', { pan, size: 1.5 }); s.play('thunder', { pan, size: 1, vol: 1 }); this.ui.banner(`${e.name} 격파`, '승리'); break;
 				case 'bossSurge': s.play('wave', { pan, vol: 1 }); s.play('splash', { pan, size: 1 }); this.shake(0.5); break;
 				case 'bossDive': s.play('splash', { pan, size: 1 }); break;
 				case 'bossClouds': s.play('fly', { pan }); break;
@@ -422,7 +422,7 @@ export class Game {
 				case 'splashHit': s.play('splash', { pan, size: 0.6 }); break;
 				case 'vapour': if (Math.random() < 0.25) fx.puff(e.mob ? e.mob.x + (Math.random() - 0.5) * 20 : e.x, (e.mob ? e.mob.y : e.y) - 4, 2, 10, [1, 1, 1, 0.3], 2.2, 2.5, 0.7); break;
 				case 'coreHit': s.play('glasshit', { pan }); this.hitstop(0.04); break;
-				case 'slip': if (Math.random() < 0.5 && !this.testMode) this.ui.toast('It slips out of the Grip: freeze it first'); break;
+				case 'slip': if (Math.random() < 0.5 && !this.testMode) this.ui.toast('그립에서 빠져나갑니다: 먼저 얼리세요'); break;
 			}
 		}
 		this.enemies.events.length = 0;
@@ -441,7 +441,7 @@ export class Game {
 		for (let n = 0; n < 220; n++) { const a = Math.random() * Math.PI * 2, r = Math.random() * 16; const x = Math.floor(b.x + Math.cos(a) * r), y = Math.floor(b.y - 4 + Math.sin(a) * r * 0.7); if (w.inb(x, y) && (w.type[y * w.W + x] === S.AIR || w.type[y * w.W + x] === S.WATER) && !w.body[y * w.W + x]) { w.type[y * w.W + x] = S.STEAM; w.temp[y * w.W + x] = 160; w.life[y * w.W + x] = 140; w.wake(x, y); } }
 		for (const m of [...this.enemies.list]) { if (m.dead) continue; const c = this.enemies.center(m); const d = Math.hypot(c.x - b.x, c.y - b.y); if (d < 36) { this.enemies.hit(m, c.x, c.y, 40 * (1 - d / 36) + 10, 'steam', Math.sign(c.x - b.x), -0.6); hit = true; } }
 		this.fx.puff(b.x, b.y - 4, 30, 30, [1, 1, 1, 0.5], 3, 3, 1.2); this.sound.play('sizzle', { pan: this.pan(b.x), vol: 1 });
-		if (hit) this.combo('Scald', b.x, b.y);
+		if (hit) this.combo('스콜드', b.x, b.y);
 	}
 	// rigid chunks flying into enemies (thrown with Grip, or blown off by a blast) hit them
 	chunkHitT = new Map<number, number>();
@@ -455,16 +455,16 @@ export class Game {
 				if (Math.hypot(c.x - x, c.y - y) > m.r + R) continue;
 				const dmg = 15 + Math.min(60, b.n * sp * 0.0004);
 				this.enemies.hit(m, c.x, c.y, dmg, 'chunk', Math.sign(v.x), Math.sign(v.y) * 0.3 - 0.3);
-				if (b.thrown > 0) this.combo('Throwback', c.x, c.y);
+				if (b.thrown > 0) this.combo('스로백', c.x, c.y);
 				b.rb.setLinvel({ x: v.x * 0.45, y: v.y * 0.45 }, true); this.chunkHitT.set(b.id, this.time + 0.25); break;
 			}
 		}
 	}
 	combatHud() {
 		const combat = this.mode === 'arena' || this.mode === 'titan' || this.mode === 'leviathan' || (this.enemies.list.length > 0 && this.mode !== 'title');
-		this.ui.styleHud(combat, this.style.rank(), this.style.progress(), this.style.combo, this.style.lastT > 0 ? this.style.last : '');
+		this.ui.styleHud(combat, this.style.rank(), this.style.progress(), this.style.combo, this.style.lastT > 0 ? (MOVE_KO[this.style.last] ?? this.style.last) : '');
 		const b = this.bosses.boss;
-		if (b && !b.dead) this.ui.bossBar(true, b.kind === 'titan' ? 'The Magma Titan' : 'The Storm Leviathan', this.bosses.health(), this.bosses.phaseName());
+		if (b && !b.dead) this.ui.bossBar(true, b.kind === 'titan' ? '마그마 타이탄' : '폭풍 리바이어던', this.bosses.health(), this.bosses.phaseName());
 		else this.ui.bossBar(false);
 	}
 	combatObjectives() {
@@ -473,30 +473,30 @@ export class Game {
 			if (!this.waveActive) {
 				this.waveTimer -= DT;
 				if (this.waveTimer <= 0) { if (this.wave < ARENA_WAVES.length) this.spawnArena(this.wave + 1); }
-				this.ui.objective(this.wave === 0 ? 'Get ready' : `Wave ${this.wave} cleared`, `Next wave in ${Math.max(0, Math.ceil(this.waveTimer))}s`);
+				this.ui.objective(this.wave === 0 ? '준비하세요' : `웨이브 ${this.wave} 클리어`, `다음 웨이브까지 ${Math.max(0, Math.ceil(this.waveTimer))}초`);
 			} else {
 				const n = this.enemies.alive();
-				const kinds = [...new Set(this.enemies.list.map(e => e.kind))].map(k => ({ crawler: 'magma crawlers', brute: 'rock brutes', wraith: 'frost wraiths', swarm: 'sand swarms' } as Record<string, string>)[k] ?? k).join(', ');
-				this.ui.objective(`Wave ${this.wave} of ${ARENA_WAVES.length}: ${n} left`, kinds);
-				if (n === 0) { this.waveActive = false; this.waveTimer = 5; if (this.wave >= ARENA_WAVES.length) this.win(); else this.ui.toast(`Wave ${this.wave} cleared. Style: ${this.style.rank()}`); }
+				const kinds = [...new Set(this.enemies.list.map(e => e.kind))].map(k => ({ crawler: '마그마 크롤러', brute: '록 브루트', wraith: '프로스트 레이스', swarm: '샌드 스웜' } as Record<string, string>)[k] ?? k).join(', ');
+				this.ui.objective(`웨이브 ${this.wave}/${ARENA_WAVES.length}: 남은 적 ${n}`, kinds);
+				if (n === 0) { this.waveActive = false; this.waveTimer = 5; if (this.wave >= ARENA_WAVES.length) this.win(); else this.ui.toast(`웨이브 ${this.wave} 클리어. 스타일: ${this.style.rank()}`); }
 			}
 			return;
 		}
 		const b = this.bosses.boss;
-		if (b) { this.ui.objective(b.kind === 'titan' ? 'The Magma Titan' : 'The Storm Leviathan', this.bosses.phaseName()); if (b.dead) this.win(); }
+		if (b) { this.ui.objective(b.kind === 'titan' ? '마그마 타이탄' : '폭풍 리바이어던', this.bosses.phaseName()); if (b.dead) this.win(); }
 	}
 	win() {
 		this.result = 'won'; this.done = true; this.ui.clearPrompts();
 		const st = this.style, mins = `${Math.floor(this.time / 60)}:${String(Math.floor(this.time % 60)).padStart(2, '0')}`;
 		const rows: [string, string][] = this.mode === 'arena'
-			? [['Waves cleared', `${ARENA_WAVES.length}`], ['Enemies', `${this.enemies.killed}`], ['Best style', st.bestRank], ['Longest combo', `${st.maxCombo} hits`], ['Combos found', st.found.length ? st.found.join(', ') : 'none yet'], ['Time', mins]]
-			: [['Boss', this.mode === 'titan' ? 'The Magma Titan' : 'The Storm Leviathan'], ['Best style', st.bestRank], ['Longest combo', `${st.maxCombo} hits`], ['Combos found', st.found.length ? st.found.join(', ') : 'none yet'], ['Time', mins]];
-		setTimeout(() => this.ui.report(rows, this.mode === 'arena' ? 'The arena is yours.' : 'Victory.'), this.testMode ? 0 : 1800);
+			? [['클리어한 웨이브', `${ARENA_WAVES.length}`], ['처치한 적', `${this.enemies.killed}`], ['최고 스타일', st.bestRank], ['최장 콤보', `${st.maxCombo}연타`], ['발견한 콤보', st.found.length ? st.found.join(', ') : '아직 없음'], ['시간', mins]]
+			: [['보스', this.mode === 'titan' ? '마그마 타이탄' : '폭풍 리바이어던'], ['최고 스타일', st.bestRank], ['최장 콤보', `${st.maxCombo}연타`], ['발견한 콤보', st.found.length ? st.found.join(', ') : '아직 없음'], ['시간', mins]];
+		setTimeout(() => this.ui.report(rows, this.mode === 'arena' ? '아레나를 제패했습니다.' : '승리.'), this.testMode ? 0 : 1800);
 		this.sound.play('objective');
 	}
 	lose() {
 		this.result = 'lost'; this.done = true; this.hero.health = 1; this.ui.clearPrompts();
-		this.ui.report([['Reached', this.mode === 'arena' ? `Wave ${this.wave}` : `Phase ${this.bosses.stats.phase}`], ['Best style', this.style.bestRank], ['Combos found', this.style.found.length ? this.style.found.join(', ') : 'none yet']], 'Knocked out. Try again?');
+		this.ui.report([['도달', this.mode === 'arena' ? `웨이브 ${this.wave}` : `단계 ${this.bosses.stats.phase}`], ['최고 스타일', this.style.bestRank], ['발견한 콤보', this.style.found.length ? this.style.found.join(', ') : '아직 없음']], '기절했습니다. 다시 도전할까요?');
 	}
 	bodyEvents() {
 		for (const e of this.bodies.events) {
@@ -577,11 +577,11 @@ export class Game {
 		if (!this.waveActive) {
 			this.waveTimer -= DT;
 			if (this.waveTimer <= 0 && this.wave < this.totalWaves) this.spawnWave(this.wave + 1);
-			this.ui.objective(this.wave === 0 ? 'Get ready' : `Wave ${this.wave} cleared`, this.wave < this.totalWaves ? `Next wave in ${Math.max(0, Math.ceil(this.waveTimer))}s` : '');
+			this.ui.objective(this.wave === 0 ? '준비하세요' : `웨이브 ${this.wave} 클리어`, this.wave < this.totalWaves ? `다음 웨이브까지 ${Math.max(0, Math.ceil(this.waveTimer))}초` : '');
 		} else {
 			const n = this.enemies.alive();
-			this.ui.objective(`Wave ${this.wave} of ${this.totalWaves}: ${n} left`, 'They come from the volcano. Keep the town standing.');
-			if (n === 0) { this.waveActive = false; this.waveTimer = 6; if (this.wave >= this.totalWaves) this.finish(); else this.ui.toast(`Wave ${this.wave} cleared`); }
+			this.ui.objective(`웨이브 ${this.wave}/${this.totalWaves}: 남은 적 ${n}`, '화산에서 몰려옵니다. 마을을 지켜내세요.');
+			if (n === 0) { this.waveActive = false; this.waveTimer = 6; if (this.wave >= this.totalWaves) this.finish(); else this.ui.toast(`웨이브 ${this.wave} 클리어`); }
 		}
 		if (this.town < 0.35) this.finish(true);
 	}
@@ -589,9 +589,9 @@ export class Game {
 		this.done = true;
 		const st = this.w.stats;
 		this.ui.report([
-			['Town still standing', `${Math.round(this.town * 100)}%`], ['Sea level', `${Math.round(this.sea * 100)}%`], ['Enemies cleared', `${this.enemies.killed}`],
-			['Water boiled', `${(st.boiled / 1000).toFixed(1)}k cells`], ['Rain that fell back', `${(st.rained / 1000).toFixed(1)}k cells`], ['Time', `${Math.floor(this.time / 60)}:${String(Math.floor(this.time % 60)).padStart(2, '0')}`],
-		], lost ? 'The town is mostly rubble. The council will write.' : this.town > 0.85 ? 'Town saved. The council is almost grateful.' : 'Town saved, mostly. Expect a bill.');
+			['남은 마을', `${Math.round(this.town * 100)}%`], ['해수면', `${Math.round(this.sea * 100)}%`], ['처치한 적', `${this.enemies.killed}`],
+			['끓인 물', `${(st.boiled / 1000).toFixed(1)}k 셀`], ['다시 내린 비', `${(st.rained / 1000).toFixed(1)}k 셀`], ['시간', `${Math.floor(this.time / 60)}:${String(Math.floor(this.time % 60)).padStart(2, '0')}`],
+		], lost ? '마을은 거의 잔해입니다. 의회에서 연락이 올 겁니다.' : this.town > 0.85 ? '마을을 지켰습니다. 의회도 거의 감사해합니다.' : '마을을 지키긴 했습니다. 청구서를 각오하세요.');
 		this.sound.play('objective');
 	}
 	// ---------------------------------------------------------------- draw
@@ -683,4 +683,4 @@ export class Game {
 			rig: { ...h.rig.stats, pops: { over: h.rig.pops.over, hard: h.rig.pops.hard, max: h.rig.pops.max, impactMax: h.rig.pops.impactMax } },
 		};
 	}
-}
+				}
