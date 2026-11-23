@@ -13,7 +13,7 @@
 	const btn = document.createElement('button');
 	btn.type = 'button';
 	btn.textContent = 'i';
-	btn.setAttribute('aria-label', 'Credits');
+	btn.setAttribute('aria-label', '크레딧');
 	btn.style.cssText = 'pointer-events:auto;width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.45);background:rgba(10,16,24,.45);color:#fff;font:italic 600 14px/22px Georgia,serif;padding:0;cursor:pointer;opacity:.55';
 	const panel = document.createElement('div');
 	panel.hidden = true;
@@ -25,9 +25,9 @@
 		panel.appendChild(p);
 	};
 	line(C.title, 'font-weight:700;font-size:15px');
-	line('by ' + C.author);
-	line('License: ' + C.license);
-	line('Source: ' + C.source, 'word-break:break-all');
+	line('제작: ' + C.author);
+	line('라이선스: ' + C.license);
+	line('출처: ' + C.source, 'word-break:break-all');
 	line(C.added, 'margin-top:6px;opacity:.7');
 	btn.addEventListener('click', () => {
 		panel.hidden = !panel.hidden;
