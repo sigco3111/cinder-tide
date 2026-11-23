@@ -38,7 +38,7 @@ export class Bosses {
 		const body = m.data.waterNow / m.data.water0, shell = m.data.platesLeft / 4, core = Math.max(0, m.data.coreHp) / 160;
 		return m.data.phase === 1 ? 0.67 + 0.33 * clamp((body - 0.38) / 0.62, 0, 1) : m.data.phase === 2 ? 0.34 + 0.33 * shell : 0.34 * core;
 	}
-	phaseName() { const m = this.boss; if (!m) return ''; if (m.kind === 'titan') return m.data.phase === 1 ? 'Cool an arm, then break it' : m.data.phase === 2 ? 'Freeze the core, then shatter it' : ''; return m.data.phase === 1 ? 'Boil its body away' : m.data.phase === 2 ? 'Freeze it, then tear off its shell with Grip' : 'Break the storm core'; }
+	phaseName() { const m = this.boss; if (!m) return ''; if (m.kind === 'titan') return m.data.phase === 1 ? '팔을 식힌 뒤 부수세요' : m.data.phase === 2 ? '코어를 얼린 뒤 산산조각 내세요' : ''; return m.data.phase === 1 ? '몸을 끓여 없애세요' : m.data.phase === 2 ? '얼린 뒤 그립으로 껍질을 뜯어내세요' : '폭풍 코어를 부수세요'; }
 	// ======================================================================= the Magma Titan
 	spawnTitan(x: number, y: number) {
 		const torso: Cell[] = [], head: Cell[] = [];
@@ -66,7 +66,7 @@ export class Bosses {
 		const m = this.en.newMob('titan', x, y + 75, parts, 1); m.boss = true; m.r = 30; m.mass = 99; m.face = -1;
 		m.data = { phase: 0, armsLeft: 2, layers: 3, coreFrost: 0, coreFrozen: 0, x0: x, y0: y, rise: 0, cool: 3, stagger: 0, dying: 0, breathT: 0, invuln: 0, throwArm: 2 };
 		this.boss = m; this.stats.phase = 1;
-		this.en.ev('bossIntro', m, x, y - 40, { name: 'The Magma Titan' });
+		this.en.ev('bossIntro', m, x, y - 40, { name: '마그마 타이탄' });
 		return m;
 	}
 	arms(m: Mob) { return [m.parts[2], m.parts[3]]; }
@@ -75,7 +75,7 @@ export class Bosses {
 		const d = m.data, w = this.w;
 		if (d.dying > 0) return; // comes apart in afterStamp
 		// rise out of the crater
-		if (d.phase === 0) { d.rise += dt; m.y = d.y0 + 75 * Math.max(0, 1 - d.rise / 2.6); if (d.rise > 2.6) { d.phase = 1; m.state = 'idle'; m.stateT = 0; this.en.ev('bossPhase', m, m.x, m.y - 40, { name: 'Cool an arm, then break it' }); } this.idlePose(m, dt); return; }
+		if (d.phase === 0) { d.rise += dt; m.y = d.y0 + 75 * Math.max(0, 1 - d.rise / 2.6); if (d.rise > 2.6) { d.phase = 1; m.state = 'idle'; m.stateT = 0; this.en.ev('bossPhase', m, m.x, m.y - 40, { name: '팔을 식힌 뒤 부수세요' }); } this.idlePose(m, dt); return; }
 		const arms = this.arms(m);
 		// arms: cooled by rime (titanCold) and by water touching them (afterStamp); left alone they heat back up
 		for (const p of arms) {
@@ -172,7 +172,7 @@ export class Bosses {
 	titanHeat(m: Mob, c: Cell, amount: number) {
 		const p = m.parts[c.part];
 		if (p === m.parts[2] || p === m.parts[3]) { p.heat = Math.min(1, p.heat + amount * 0.00004); if (rnd() < 0.04) this.en.ev('shrug', m, m.x + p.px, m.y + p.py + 20); return; }
-		if (c.role === CORE && m.data.coreFrozen > 0) { this.shatterCore(m, 'steam'); this.en.ev('combo', m, m.x, m.y - 31, { name: 'Steam Bomb' }); }
+		if (c.role === CORE && m.data.coreFrozen > 0) { this.shatterCore(m, 'steam'); this.en.ev('combo', m, m.x, m.y - 31, { name: '스팀 밤' }); }
 	}
 	titanHit(m: Mob, x: number, y: number, amount: number, kind: string, dx: number, dy: number) {
 		if (m.data.phase === 0 || m.data.dying > 0 || amount < 6) return;
@@ -201,7 +201,7 @@ export class Bosses {
 			m.data.phase = 2; this.stats.phase = 2; m.data.stagger = 2.2;
 			const plates = m.parts[0].cells.filter(c => c.alive && c.role === PLATE);
 			for (let k = 0; k < 4; k++) this.en.chunk(m, plates.filter(c => c.plate === k), { x: (k % 2 ? 40 : -40), y: -40 }, 2);
-			this.en.ev('bossPhase', m, m.x, m.y - 31, { name: 'Freeze the core, then shatter it' });
+			this.en.ev('bossPhase', m, m.x, m.y - 31, { name: '코어를 얼린 뒤 산산조각 내세요' });
 		}
 	}
 	shatterCore(m: Mob, kind: string) {
@@ -228,7 +228,7 @@ export class Bosses {
 		if (solid.length > 30 && rnd() < 0.5) this.en.chunk(m, solid, { x: (rnd() - 0.5) * 40, y: -20 }, 2); else for (const c of solid) this.en.release(m, c, (rnd() - 0.5) * 50, -rnd() * 30, true, rnd() < 0.5 ? S.RUBBLE : c.t);
 		for (const c of lava) this.en.release(m, c, (rnd() - 0.5) * 60, -10 - rnd() * 40, true, S.LAVA);
 		if (rnd() < 0.3) this.en.ev('bossCrumble', m, m.x + (rnd() - 0.5) * 40, m.y - 30 - rnd() * 30);
-		if (d.dying > 2.8 || !live.length) { this.en.kill(m, 'boss', true); this.boss = m; this.en.ev('bossDead', m, m.x, m.y - 30, { name: 'The Magma Titan' }); }
+		if (d.dying > 2.8 || !live.length) { this.en.kill(m, 'boss', true); this.boss = m; this.en.ev('bossDead', m, m.x, m.y - 30, { name: '마그마 타이탄' }); }
 	}
 	// ======================================================================= the Storm Leviathan
 	spawnLeviathan(x: number, y: number) {
@@ -260,7 +260,7 @@ export class Bosses {
 		m.data = { phase: 1, water0, waterNow: water0, platesLeft: 4, coreHp: 160, frost: 0, frozen: 0, dive: 0, surfaced: 0, cool: 3, x0: x, y0: y, dying: 0, revealed: 0, tx: x, ty: y, trail: 0 };
 		m.data.trailX = x; (m as any).trail = Array.from({ length: 600 }, () => ({ x, y }));
 		this.boss = m; this.stats.phase = 1;
-		this.en.ev('bossIntro', m, x, y, { name: 'The Storm Leviathan' });
+		this.en.ev('bossIntro', m, x, y, { name: '폭풍 리바이어던' });
 		return m;
 	}
 	leviStep(m: Mob, dt: number, hero: Hero) {
@@ -268,8 +268,8 @@ export class Bosses {
 		if (d.dying > 0) return;
 		const trail = (m as any).trail as { x: number; y: number }[];
 		d.waterNow = m.parts.reduce((s, p) => s + p.cells.filter(c => c.alive && (c.t === S.STORM || c.t === S.ICE)).length, 0);
-		if (d.phase === 1 && d.waterNow < d.water0 * 0.38) { d.phase = 2; this.stats.phase = 2; this.en.ev('bossPhase', m, m.x, m.y, { name: 'Freeze it, then tear off its shell with Grip' }); }
-		if (d.phase === 2 && d.platesLeft <= 0) { d.phase = 3; this.stats.phase = 3; this.en.ev('bossPhase', m, m.x, m.y, { name: 'Break the storm core' }); }
+		if (d.phase === 1 && d.waterNow < d.water0 * 0.38) { d.phase = 2; this.stats.phase = 2; this.en.ev('bossPhase', m, m.x, m.y, { name: '얼린 뒤 그립으로 껍질을 뜯어내세요' }); }
+		if (d.phase === 2 && d.platesLeft <= 0) { d.phase = 3; this.stats.phase = 3; this.en.ev('bossPhase', m, m.x, m.y, { name: '폭풍 코어를 부수세요' }); }
 		if (d.chill > 0) { if (d.frozen <= 0) { d.frost += Math.min(1, d.chill / 25) / (d.phase >= 2 ? 200 : 500); if (d.frost >= 1) this.leviFreeze(m, true); } d.chill = 0; }
 		if (d.frozen > 0) { d.frozen -= dt; if (d.frozen <= 0) this.leviFreeze(m, false); }
 		else if (d.frost > 0 && !(d.chill > 0)) d.frost = Math.max(0, d.frost - dt * 0.08);
@@ -390,7 +390,7 @@ export class Bosses {
 		if (d.dying < 0.1 || rnd() < 0.5) {
 			for (const p of m.parts) for (const c of p.cells) if (c.alive && rnd() < dt * 2.5) this.en.release(m, c, (rnd() - 0.5) * 70, -30 - rnd() * 80, true, c.role === CORE ? S.SHARD : c.t === S.ICE ? S.ICE : S.WATER);
 		}
-		if (d.dying > 2.4) { for (const p of m.parts) for (const c of p.cells) if (c.alive) this.en.release(m, c, (rnd() - 0.5) * 80, -40 - rnd() * 60, true, c.role === CORE ? S.SHARD : S.WATER); this.en.kill(m, 'boss', true); this.en.ev('bossDead', m, m.x, m.y, { name: 'The Storm Leviathan' }); }
+		if (d.dying > 2.4) { for (const p of m.parts) for (const c of p.cells) if (c.alive) this.en.release(m, c, (rnd() - 0.5) * 80, -40 - rnd() * 60, true, c.role === CORE ? S.SHARD : S.WATER); this.en.kill(m, 'boss', true); this.en.ev('bossDead', m, m.x, m.y, { name: '폭풍 리바이어던' }); }
 	}
 	// ======================================================================= shared: waves, marks, bolts, boulders
 	afterStamp(dt: number) {
