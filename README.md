@@ -1,41 +1,89 @@
----
-kind: game
-engine: WebGL2
----
+# 신더 타이드 (Cinder Tide) 한국어판
 
-# Cinder Tide
+모든 픽셀이 실제 물질로 시뮬레이션되는 2D 슈퍼히어로 샌드박스 게임, **Cinder Tide**의 한국어 번역판입니다.
 
-A 2D superhero sandbox where every pixel is real matter. Boil the sea into clouds and rain, tear chunks out of cliffs, and fight enemies made of lava, rock, ice and sand, plus a Magma Titan and a Storm Leviathan.
+- **플레이 (GitHub Pages):** https://sigco3111.github.io/cinder-tide/
+- **원작:** [Patch의 blendi/cinder-tide](https://patch.gg/games/blendi/cinder-tide) (제작: Patch)
+- **원본 소스:** https://git.patch.gg/blendi/cinder-tide.git (공개 저장소)
 
-On Patch as `blendi/cinder-tide`.
+## 게임 소개
 
-> **Most of the sound effects aren't in this repo.** They're cut from a sound library whose licence allows them inside a game but not as files anyone can download. The game builds and plays without them, with those sounds silent. [MISSING_ASSETS.md](MISSING_ASSETS.md) lists every one, where to get its recording and how to put it back.
+황금빛 석양의 해안 섬을 무대로 한 2D 슈퍼히어로 샌드박스입니다. 화면에 보이는 모든 것, 바위, 모래, 흙, 물, 용암, 불, 연기, 증기, 구름, 눈, 얼음, 유리, 금속, 벽돌, 나무가 셀 단위로 시뮬레이션됩니다. 열이 전도되고, 물이 끓어 증기가 되어 구름으로 올라가 비로 다시 내리고, 용암은 바다를 만나 흑요석으로 굳습니다. 느슨해진 지형은 강체로 떨어져 나가 착지 지점에서 산산조각 납니다.
 
-## How it's built
+물 순환이 백미입니다: 마그마 랜스로 바다를 끓이면 증기 기둥이 솟아 구름이 되고, 비가 내려 바다를 다시 채웁니다. 파도 소리, 끓는 소리, 자신이 만든 구름에서 내리는 비와 천둥 소리까지 들립니다.
 
-A browser game in TypeScript, bundled by Vite into a folder of static files. The world is a cellular simulation (`src/engine/sim.ts`): heat spreads, water boils to steam that rises into cloud and rains back, lava sets into obsidian, and loose pieces break off as rigid bodies in [Rapier 2D](https://rapier.rs) and shatter where they land. It draws with plain WebGL2 (`src/engine/render.ts`). There are no sprite or model files: the hero, the enemies, the effects and the island are all drawn in code, and the hero is animated by a procedural rig.
+## 조작법
 
-## Run it
+| 동작 | 키보드/마우스 | 게임패드 |
+| --- | --- | --- |
+| 이동 | A / D | 왼쪽 스틱 |
+| 점프 | Space | A |
+| 비행 | 공중에서 Space 한 번 더, 이후 W A S D (C로 해제) | 공중에서 A, 왼쪽 스틱 (Y로 해제) |
+| 마그마 랜스 | 왼쪽 마우스 유지 | RT |
+| 라바 블래스트 | 오른쪽 마우스 유지 후 놓기 | LT |
+| 그립 | 바위에 E 유지, 튕기듯 놓기 (스크롤로 원 크기) | RB (십자키 + RB: 크기) |
+| 라임 버스트 | F 유지 | LB |
+| 메테오 드롭 | 공중에서 Q | X |
+| 페이즈 대시 | Shift | B |
+| 조준 | 마우스 | 오른쪽 스틱 |
+| 조작법 카드 | H | Back |
+| 일시정지 | Esc | Start |
 
-It takes Node 20 or newer.
+## 능력
+
+- **마그마 랜스**: 물을 끓이고 바위와 금속을 녹이는 열선. 우클릭 유지 시 라바 블래스트 충전.
+- **그립**: 커서 위치 원 안의 바위를 정확히 뜯어내 던집니다.
+- **라임 버스트**: 물, 용암, 증기, 구름, 적을 얼립니다.
+- **메테오 드롭**: 공중에서 급강하해 충격파를 내리꽂습니다.
+- **페이즈 대시**: 금속·현무암보다 부드러운 모든 것을 뚫는 대시.
+
+## 적과 상성
+
+- **마그마 크롤러**: 바위 껍질 속 용암 코어. 라임 버스트로 흑요석화한 뒤 타격하면 산산조각.
+- **록 브루트**: 현무암 장갑 밑 용암 심장. 그립으로 장갑판을 뜯거나 메테오 드롭으로 금을 낸 뒤 심장 공격.
+- **프로스트 레이스**: 얼음 비행체. 마그마 랜스로 녹이면 되고, 방치하면 다시 얼어붙음.
+- **샌드 스웜**: 흩어졌다 다시 모이는 모래. 폭발로 흩뜨리거나 열로 유리화해 부수기.
+
+능력을 조합(얼린 뒤 메테오 드롭, 적끼리 투척, 물에 블래스트로 화상 증기 폭발 등)하면 처음 발견한 콤보에 이름이 붙고 스타일 등급(D~S)이 올라갑니다.
+
+## 모드
+
+- **플레이**: 가이드 투어 후 마을 방어 웨이브
+- **아레나**: 혼합 적 3웨이브
+- **보스전 2종**: 마그마 타이탄(화산), 폭풍 리바이어던(만) — 각각 다단계 퍼즐 보스
+- **샌드박스**: 실패 없는 자유 모드
+
+## 기술
+
+- TypeScript + Vite, 정적 파일 빌드 (`dist/`)
+- 셀룰러 월드 시뮬레이션 (`src/engine/sim.ts`): 열 전도, 수증기→구름→비, 용암→흑요석, 기압장
+- 평범한 WebGL2 렌더링 (`src/engine/render.ts`) — 스프라이트·모델 파일 없이 전부 코드로 그림
+- 강체 물리: Rapier 2D (Apache-2.0)
+- 주인공은 코드로만 애니메이션되는 절차적 리그 (IK, 스프링, 망토·머리카락)
+
+## 빌드와 실행
+
+Node 20 이상:
 
 ```sh
 npm ci
 npm run dev        # http://localhost:5191
-npm run build      # makes dist/, the game as Patch serves it
-node scripts/preview.mjs dist 8080   # serves dist/ with the game host's headers
+npm run build      # dist/ 생성 (배포본)
+node scripts/preview.mjs dist 8080
 ```
 
-Controls: A and D to move, Space to jump, Space again in the air to fly (W A S D steers, C stops flying). Hold left mouse for the Magma Lance, hold right mouse to charge a Lava Blast, hold E to Grip rock (flick and let go to throw, scroll to size the circle), hold F for Rime Burst, Q in the air for Meteor Drop, Shift to Phase Dash. H shows the controls, Esc pauses. Gamepads work too, menus included: the D-pad or left stick picks a button, A presses it, B goes back, Start pauses.
+## 한국어판 변경 사항
 
-Modes: Play (a guided tour, then waves on the town), Arena, the two boss fights, and Sandbox.
+- 게임 내 모든 UI·튜토리얼·목표·토스트·결과 카드·콤보 이름 한국어 번역
+- 한국어 웹폰트 **Pretendard Variable** 추가 (SIL OFL 1.1, `public/fonts/`, 원저작권자: 길형진 — `public/fonts/PRETENDARD-LICENSE.txt` 참조)
+- 크레딧 버튼(왼쪽 아래 "i") 라벨 한국어화
+- 스타일 등급(D~S), 키 이름, 게임패드 버튼 이름은 원문 유지
 
-`AGENTS.md` says how to check and change it, and where things live.
+## 라이선스와 자산 안내
 
-## What's left out
-
-87 sound effects, each shipped as `.ogg` and `.m4a` (174 files in `public/sfx/`): explosions, rock and debris, glass, ice, water and waves, rain and thunder, the Magma Lance's flame, steam, lava, punches and the bosses' roars. They come from the Sonniss GDC Game Audio Bundles, which are free to download and to use in games, but may not be passed on as files. Without them those sounds are silent; the music, footsteps, wind, hurt and UI sounds are here. [MISSING_ASSETS.md](MISSING_ASSETS.md) has the list and the steps to rebuild them with `scripts/sounds.mjs`.
-
-## Licence
-
-The code is MIT ([LICENSE](LICENSE)). The sounds in this repo are CC0: the music, "An Untold Legend" by SkyleTheFrench, and recordings from Freesound and Kenney. The released game's art licence is proprietary only because of the left-out sounds. Rapier keeps its own licence, in [LICENSES/](LICENSES). Credits: [public/CREDITS.md](public/CREDITS.md).
+- 코드는 원작과 동일하게 **MIT** (`LICENSE`).
+- **이 저장소에는 원작 게임의 음향 효과 87개가 빠져 있습니다** (원작 저장소와 동일한 상태). Sonniss GDC 번들 라이선스가 게임 안에서의 사용만 허용하고 파일 재배포를 금지하기 때문입니다. 해당 소리는 무음으로 재생되며, 복구 방법은 `MISSING_ASSETS.md`에 있습니다. 음악, 발소리, 바람, UI 소리는 포함되어 있습니다.
+- 음악: "An Untold Legend" by SkyleTheFrench (CC0)
+- 원작 페이지의 게임 아트 라이선스는 프로프라이어터리입니다. 영감: MOLTYN, Noita (코드·에셋 미사용)
+- 번역 및 배포: 원작의 공개 저장소와 MIT 라이선스에 기반한 비공식 한국어 미러입니다. 원작자: Patch.
+- 원본 README: [README.en.md](README.en.md)
