@@ -38,4 +38,4 @@ async function boot() {
 	document.body.classList.add('ready');
 	requestAnimationFrame(game.frameLoop);
 }
-boot().catch(e => { console.error(e); const el = document.getElementById('loading'); if (el) el.textContent = 'This game needs WebGL2. ' + String(e?.message ?? e); });
+boot().catch(e => { console.error(e); const el = document.getElementById('loading'); if (el) el.textContent = '이 게임은 WebGL2가 필요합니다. ' + String(e?.message ?? e); });
