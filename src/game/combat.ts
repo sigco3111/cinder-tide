@@ -2,16 +2,17 @@
 // within the last few scores less each time, a combo scores a lot, and getting hurt knocks the meter down. The rank
 // (D, C, B, A, S) comes from the meter, which drains over time. Combos are named the first time they happen.
 export const COMBOS: Record<string, string> = {
-	'Strike': 'Grip an enemy and throw it into another',
-	'Shatterfall': 'Freeze an enemy, then Meteor Drop onto it',
-	'Steam Bomb': 'Lance a frozen enemy: the ice flashes to steam',
-	'Sandstorm': 'Phase Dash through a sand swarm',
-	'Scald': 'Lava Blast into water: a scalding steam burst',
-	'Juggle': 'Launch an enemy with a blast and keep it up with the lance',
-	'Icebreaker': 'Shatter a frozen magma crawler',
-	'Disarm': 'Tear a plate off a rock brute with Grip',
-	'Throwback': 'Hit an enemy with its own armour',
+	'스트라이크': '적을 그립으로 잡아 다른 적에게 던지기',
+	'셰터폴': '적을 얼린 뒤 메테오 드롭으로 내려찍기',
+	'스팀 밤': '얼린 적을 랜스로 공격: 얼음이 순식간에 증기로',
+	'샌드스톰': '페이즈 대시로 샌드 스웜 관통하기',
+	'스콜드': '물에 라바 블래스트: 화상 증기 폭발',
+	'저글': '폭발로 적을 띄우고 랜스로 계속 띄워두기',
+	'아이스브레이커': '얼어붙은 마그마 크롤러 산산조각 내기',
+	'디스암': '그립으로 록 브루트의 장갑판 뜯어내기',
+	'스로백': '적의 장갑으로 그 적을 때리기',
 };
+export const MOVE_KO: Record<string, string> = { heat: '히트', blast: '블래스트', slam: '슬램', dash: '대시', thrown: '투척', chunk: '파편', steam: '스팀', grip: '그립', freeze: '빙결', crush: '분쇄', fall: '낙하', kill: '처치' };
 const RANKS = [{ r: 'D', at: 0 }, { r: 'C', at: 120 }, { r: 'B', at: 300 }, { r: 'A', at: 600 }, { r: 'S', at: 1000 }];
 const BASE: Record<string, number> = { heat: 2, blast: 40, slam: 45, dash: 30, thrown: 45, chunk: 40, steam: 30, grip: 30, freeze: 35, crush: 30, fall: 10, kill: 50 };
 
