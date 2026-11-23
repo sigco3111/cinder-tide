@@ -2,12 +2,12 @@
 const $ = (id: string) => document.getElementById(id)!;
 
 export const POWERS = [
-	{ id: 'lance', name: 'Magma Lance', key: 'Hold left mouse', pad: '{RT}', hint: 'Boils water, melts rock and metal' },
-	{ id: 'blast', name: 'Lava Blast', key: 'Hold right mouse, release', pad: '{LT}', hint: 'A charged blast at the cursor' },
-	{ id: 'grip', name: 'Grip', key: 'Hold E on rock, flick, let go', pad: '{RB} (d-pad + {RB}: size)', hint: 'Tears out what is in the circle at the cursor; scroll sizes it' },
-	{ id: 'rime', name: 'Rime Burst', key: 'Hold F', pad: '{LB}', hint: 'Freezes water, lava, steam and enemies' },
-	{ id: 'meteor', name: 'Meteor Drop', key: 'Q in the air', pad: '{X}', hint: 'Dive and slam a shockwave' },
-	{ id: 'dash', name: 'Phase Dash', key: 'Shift', pad: '{B}', hint: 'Carves a tunnel through anything softer than metal' },
+	{ id: 'lance', name: '마그마 랜스', key: '왼쪽 마우스 유지', pad: '{RT}', hint: '물을 끓이고 바위와 금속을 녹입니다' },
+	{ id: 'blast', name: '라바 블래스트', key: '오른쪽 마우스 유지 후 놓기', pad: '{LT}', hint: '커서를 향해 충전 폭발을 발사합니다' },
+	{ id: 'grip', name: '그립', key: '바위에 E 유지, 튕기듯 놓기', pad: '{RB} (십자키 + {RB}: 크기)', hint: '커서 위치 원 안의 것을 뜯어냅니다. 스크롤로 크기 조절' },
+	{ id: 'rime', name: '라임 버스트', key: 'F 유지', pad: '{LB}', hint: '물, 용암, 증기, 적을 얼립니다' },
+	{ id: 'meteor', name: '메테오 드롭', key: '공중에서 Q', pad: '{X}', hint: '급강하해 충격파를 내리꽂습니다' },
+	{ id: 'dash', name: '페이즈 대시', key: 'Shift', pad: '{B}', hint: '금속보다 부드러운 모든 것을 뚫고 지나갑니다' },
 ];
 
 export class UI {
@@ -43,10 +43,10 @@ export class UI {
 	/** Keyboard or pad words on the HUD's powers and hint line; the controls card's pad column in the pad's own names. */
 	words(pad: boolean, label: (s: string) => string) {
 		for (const p of POWERS) { const s = document.querySelector(`#pw-${p.id} span`); if (s) s.textContent = pad ? label(p.pad) : p.key; }
-		$('hint').textContent = pad ? label('{Back} controls · {Start} menu') : 'H controls · Esc menu';
+		$('hint').textContent = pad ? label('{Back} 조작법 · {Start} 메뉴') : 'H 조작법 · Esc 메뉴';
 		$('help-table').innerHTML = [
-			['Move', 'A / D', 'Left stick'], ['Jump', 'Space', '{A}'], ['Fly', 'Space again in the air, then W A S D', '{A} in the air, left stick'], ['Stop flying', 'C', '{Y}'],
-			...POWERS.map(p => [p.name, p.key, p.pad]), ['Aim', 'Mouse', 'Right stick'], ['This card', 'H', '{Back}'], ['Pause', 'Esc', '{Start}'],
+			['이동', 'A / D', '왼쪽 스틱'], ['점프', 'Space', '{A}'], ['비행', '공중에서 Space 한 번 더, 이후 W A S D', '공중에서 {A}, 왼쪽 스틱'], ['비행 해제', 'C', '{Y}'],
+			...POWERS.map(p => [p.name, p.key, p.pad]), ['조준', '마우스', '오른쪽 스틱'], ['이 카드', 'H', '{Back}'], ['일시정지', 'Esc', '{Start}'],
 		].map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${label(r[2])}</td></tr>`).join('');
 	}
 	hideTitle(instant = false) { if (instant) ($('title') as HTMLElement).style.transition = 'none'; $('title').classList.add('gone'); $('hud').classList.add('on'); }
@@ -69,7 +69,7 @@ export class UI {
 		$('style').classList.toggle('on', on); if (!on) return;
 		const r = $('style-rank'); if (rank !== this.lastRank) { r.textContent = rank; r.className = 'r' + rank; void r.offsetWidth; r.classList.add('bump'); setTimeout(() => r.classList.remove('bump'), 150); this.lastRank = rank; }
 		($('style-bar') as HTMLElement).style.width = `${Math.round(prog * 100)}%`;
-		$('style-combo').textContent = combo > 1 ? `${combo} hits` : ''; $('style-move').textContent = move;
+		$('style-combo').textContent = combo > 1 ? `${combo}연타` : ''; $('style-move').textContent = move;
 	}
 	bannerT = 0;
 	banner(name: string, sub: string) { $('banner-name').textContent = name; $('banner-sub').textContent = sub; $('banner').classList.add('show'); clearTimeout(this.bannerT); this.bannerT = setTimeout(() => $('banner').classList.remove('show'), 2200) as unknown as number; }
